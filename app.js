@@ -40,11 +40,16 @@ function resolveExercise(ex, user) {
     reps: base.reps,
     indicacion: base.indicacion,
     notaUsuario: nota,
+    medida: base.medida || "kg",   // 'kg' | 'reps' | 'seg' (posición inicial del toggle)
   };
 }
 function objetivo(ex) {
   return `${ex.series} × ${ex.reps}`;
 }
+
+// Etiqueta/unidad de cada tipo de medida.
+const MEDIDAS = { kg: "Kg", reps: "Reps", seg: "Seg" };
+const UNIDAD = { kg: "kg", reps: "reps", seg: "seg" };
 
 // ---------------- Navegación entre pantallas ----------------
 function showScreen(name) {
@@ -174,11 +179,17 @@ function buildExerciseCard(ex, index) {
 
   const form = document.createElement("div");
   form.className = "load-form";
+  const med = ex.medida;
   form.innerHTML = `
+    <div class="metric-toggle" id="toggle-${index}" data-medida="${med}">
+      ${Object.keys(MEDIDAS).map(m =>
+        `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
+      ).join("")}
+    </div>
     <div class="input-row">
       <div class="field">
-        <label>Kg</label>
-        <input type="number" inputmode="decimal" step="0.5" id="kg-${index}" placeholder="—" />
+        <label id="vlabel-${index}">${MEDIDAS[med]}</label>
+        <input type="number" inputmode="decimal" step="0.5" id="val-${index}" placeholder="—" />
       </div>
       <div class="field">
         <label>RIR</label>
@@ -192,6 +203,17 @@ function buildExerciseCard(ex, index) {
     <button class="btn-save" id="save-${index}">Guardar</button>`;
   frag.appendChild(form);
 
+  // Toggle Kg / Reps / Seg
+  form.querySelectorAll(`#toggle-${index} button`).forEach(b => {
+    b.addEventListener("click", () => {
+      const m = b.dataset.m;
+      const toggle = $(`#toggle-${index}`);
+      toggle.dataset.medida = m;
+      toggle.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      $(`#vlabel-${index}`).textContent = MEDIDAS[m];
+    });
+  });
+
   form.querySelector(`#save-${index}`).addEventListener("click", () => saveExercise(index));
   return frag;
 }
@@ -203,7 +225,8 @@ function renderHistoryInto(el, exerciseId) {
     return;
   }
   el.innerHTML = rows.map(r => {
-    const kg = (r.kg ?? "") !== "" ? `${r.kg} kg` : "—";
+    const u = UNIDAD[r.medida] || "kg";
+    const kg = (r.kg ?? "") !== "" ? `${r.kg} ${u}` : "—";
     const rir = (r.rir ?? "") !== "" ? `RIR ${r.rir}` : "";
     const nota = r.nota ? `<span class="hist-note">“${r.nota}”</span>` : "";
     const badge = r._pending ? `<span class="hist-badge">⏳</span>` : "";
@@ -219,16 +242,17 @@ function renderHistoryInto(el, exerciseId) {
 // ---------------- Guardar una carga ----------------
 async function saveExercise(index) {
   const ex = exercises[index];
-  const kgEl = $(`#kg-${index}`);
+  const medida = $(`#toggle-${index}`).dataset.medida || "kg";
+  const valEl = $(`#val-${index}`);
   const rirEl = $(`#rir-${index}`);
   const notaEl = $(`#nota-${index}`);
 
-  const kg = kgEl.value.trim();
+  const val = valEl.value.trim();
   const rir = rirEl.value.trim();
   const nota = notaEl.value.trim();
 
-  if (kg === "" && rir === "") {
-    toast("Cargá al menos kg o RIR");
+  if (val === "" && rir === "") {
+    toast(`Cargá ${MEDIDAS[medida].toLowerCase()} o RIR`);
     return;
   }
 
@@ -238,7 +262,8 @@ async function saveExercise(index) {
     dia: currentDay.id,
     ejercicio: ex.id,
     ejercicio_nombre: ex.nombre,
-    kg: kg === "" ? null : Number(kg),
+    medida: medida,
+    kg: val === "" ? null : Number(val),
     rir: rir === "" ? null : Number(rir),
     nota: nota || null,
   });
@@ -337,7 +362,8 @@ function showSummary() {
   exercises.forEach(ex => {
     const r = porEjercicio[ex.id];
     if (r) {
-      const kg = (r.kg ?? "") !== "" ? `${r.kg} kg` : "";
+      const u = UNIDAD[r.medida] || "kg";
+      const kg = (r.kg ?? "") !== "" ? `${r.kg} ${u}` : "";
       const rir = (r.rir ?? "") !== "" ? ` · RIR ${r.rir}` : "";
       html += `<div class="sum-row">
         <span class="sum-name">${ex.nombre}</span>

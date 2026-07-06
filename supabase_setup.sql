@@ -16,10 +16,15 @@ create table if not exists public.registros (
   dia         text        not null,               -- id del día del plan, ej: 'dia1'
   ejercicio   text        not null,               -- id del ejercicio del plan
   ejercicio_nombre text,                          -- nombre legible del ejercicio
-  kg          numeric,                            -- peso usado
+  medida      text        not null default 'kg',  -- 'kg' | 'reps' | 'seg'
+  kg          numeric,                            -- valor cargado (peso, reps o segundos según 'medida')
   rir         numeric,                            -- reps en reserva
   nota        text                                -- nota opcional
 );
+
+-- Si ya tenías la tabla creada de antes, esta línea agrega la columna 'medida'
+-- sin borrar nada (es seguro correrla aunque ya exista).
+alter table public.registros add column if not exists medida text not null default 'kg';
 
 -- Índice para que el historial por usuario+ejercicio salga rápido.
 create index if not exists registros_busqueda_idx

@@ -127,7 +127,8 @@
               "nombre": "Plancha lateral",
               "series": 3,
               "reps": "25 seg por lado",
-              "indicacion": "Cuerpo en línea recta, cadera arriba. Anotá los segundos por lado en kg si querés."
+              "medida": "seg",
+              "indicacion": "Cuerpo en línea recta, cadera arriba. Anotá los segundos que aguantaste por lado."
             }
           }
         }
@@ -167,6 +168,7 @@
           "nombre": "Ab wheel",
           "series": 3,
           "reps": "8-10",
+          "medida": "reps",
           "indicacion": "Rodá hacia adelante sin arquear la lumbar, mantené el abdomen firme."
         },
         {
@@ -183,6 +185,7 @@
               "nombre": "Frog pump",
               "series": 2,
               "reps": "20",
+              "medida": "reps",
               "indicacion": "Plantas de los pies juntas, rodillas abiertas. Empujá con el glúteo."
             },
             "tato": {
