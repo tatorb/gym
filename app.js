@@ -217,12 +217,12 @@ function renderStatusBar() {
   if (!navigator.onLine) {
     bar.className = "status-bar offline";
     bar.textContent = p > 0
-      ? `Sin conexión · ${p} carga${p > 1 ? "s" : ""} guardada${p > 1 ? "s" : ""} en el teléfono`
-      : "Sin conexión · las cargas se guardan en el teléfono";
+      ? `Sin conexión · ${p} carga${p > 1 ? "s" : ""} se subir${p > 1 ? "án" : "á"} a Supabase al volver la señal`
+      : "Sin conexión · lo que cargues se subirá a Supabase al volver la señal";
     bar.classList.remove("hidden");
   } else if (p > 0) {
     bar.className = "status-bar syncing";
-    bar.textContent = `Subiendo ${p} carga${p > 1 ? "s" : ""}…`;
+    bar.textContent = `Guardando en Supabase… (${p})`;
     bar.classList.remove("hidden");
   } else if (!DB.configured()) {
     bar.className = "status-bar offline";
