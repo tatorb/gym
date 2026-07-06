@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d0f14" />
+  <title>Gym · Tato & Gabi</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+  <!-- Barra superior de estado (conexión / cargas pendientes) -->
+  <div id="statusBar" class="status-bar hidden"></div>
+
+  <!-- ====================== PANTALLA 1: ELEGIR USUARIO ====================== -->
+  <section id="screen-user" class="screen active">
+    <div class="user-picker">
+      <h1 class="app-title">Entrenamiento</h1>
+      <p class="app-sub">¿Quién sos?</p>
+      <div class="user-buttons">
+        <button class="btn-user" data-user="tato">Tato</button>
+        <button class="btn-user" data-user="gabi">Gabi</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== PANTALLA 2: MENÚ DE DÍAS ====================== -->
+  <section id="screen-days" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-goto="user" aria-label="Cambiar usuario">‹</button>
+      <div class="topbar-title">
+        <span id="days-user-name">—</span>
+      </div>
+      <button class="icon-btn" id="btn-export" aria-label="Exportar respaldo" title="Exportar respaldo">⤓</button>
+    </header>
+    <div class="days-list" id="days-list"></div>
+  </section>
+
+  <!-- ====================== PANTALLA 3: EJERCICIO ====================== -->
+  <section id="screen-exercise" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-goto="days" aria-label="Volver a los días">‹</button>
+      <div class="topbar-title">
+        <span id="ex-day-name">—</span>
+      </div>
+      <div style="width:44px"></div>
+    </header>
+
+    <div class="exercise-viewport" id="exercise-viewport">
+      <div class="exercise-track" id="exercise-track"><!-- tarjetas generadas por JS --></div>
+    </div>
+
+    <!-- Puntos de posición + flechas -->
+    <nav class="pager">
+      <button class="arrow" id="arrow-prev" aria-label="Ejercicio anterior">‹</button>
+      <div class="dots" id="dots"></div>
+      <button class="arrow" id="arrow-next" aria-label="Ejercicio siguiente">›</button>
+    </nav>
+  </section>
+
+  <!-- ====================== PANTALLA 4: RESUMEN ====================== -->
+  <section id="screen-summary" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-goto="days" aria-label="Volver a los días">‹</button>
+      <div class="topbar-title">Resumen de la sesión</div>
+      <div style="width:44px"></div>
+    </header>
+    <div class="summary" id="summary-content"></div>
+    <div class="summary-actions">
+      <button class="btn-primary" data-goto="days">Volver al menú</button>
+    </div>
+  </section>
+
+  <!-- Cartel emergente (toast) -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- La app. type=module permite importar Supabase desde internet. -->
+  <script src="./config.js"></script>
+  <script type="module" src="./app.js"></script>
+  <script>
+    // Registrar el Service Worker (hace que la app funcione sin internet y sea instalable).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

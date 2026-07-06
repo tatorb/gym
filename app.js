@@ -1,0 +1,410 @@
+// ============================================================
+//  app.js  —  Lógica de la aplicación
+// ============================================================
+import { DB } from "./db.js";
+
+let PLAN = null;
+let currentUser = null;     // 'tato' | 'gabi'
+let currentDay = null;      // objeto del día
+let exercises = [];         // ejercicios resueltos del día para el usuario
+let currentIndex = 0;
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+
+function hoyISO() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+function fechaCorta(iso) {
+  // iso: '2026-07-06'
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} ${MESES[m - 1]}`;
+}
+
+// Resuelve un ejercicio del plan para un usuario (aplica variantes y notas).
+function resolveExercise(ex, user) {
+  let base = ex;
+  if (ex.variantes && ex.variantes[user]) {
+    base = { ...ex, ...ex.variantes[user] };
+  }
+  const nota = ex.notas && ex.notas[user] ? ex.notas[user] : null;
+  return {
+    id: ex.id,
+    nombre: base.nombre,
+    series: base.series,
+    reps: base.reps,
+    indicacion: base.indicacion,
+    notaUsuario: nota,
+  };
+}
+function objetivo(ex) {
+  return `${ex.series} × ${ex.reps}`;
+}
+
+// ---------------- Navegación entre pantallas ----------------
+function showScreen(name) {
+  $$(".screen").forEach(s => s.classList.remove("active"));
+  $(`#screen-${name}`).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+// ---------------- Toast / estado ----------------
+let toastTimer = null;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add("hidden"), 2200);
+}
+
+function renderStatusBar() {
+  const bar = $("#statusBar");
+  const p = DB.pendingCount();
+  if (!navigator.onLine) {
+    bar.className = "status-bar offline";
+    bar.textContent = p > 0
+      ? `Sin conexión · ${p} carga${p > 1 ? "s" : ""} guardada${p > 1 ? "s" : ""} en el teléfono`
+      : "Sin conexión · las cargas se guardan en el teléfono";
+    bar.classList.remove("hidden");
+  } else if (p > 0) {
+    bar.className = "status-bar syncing";
+    bar.textContent = `Subiendo ${p} carga${p > 1 ? "s" : ""}…`;
+    bar.classList.remove("hidden");
+  } else if (!DB.configured()) {
+    bar.className = "status-bar offline";
+    bar.textContent = "Falta configurar Supabase (ver README). Por ahora se guarda solo en el teléfono.";
+    bar.classList.remove("hidden");
+  } else {
+    bar.classList.add("hidden");
+  }
+}
+
+DB.onStatus(() => renderStatusBar());
+window.addEventListener("online", renderStatusBar);
+window.addEventListener("offline", renderStatusBar);
+
+// ---------------- Elegir usuario ----------------
+function selectUser(user) {
+  currentUser = user;
+  DB.setLastUser(user);
+  document.body.dataset.user = user;
+  $("#days-user-name").textContent = PLAN.usuarios[user]?.nombre || user;
+  renderDays();
+  showScreen("days");
+  DB.refresh(); // trae el historial del servidor si hay internet
+}
+
+// ---------------- Menú de días ----------------
+function renderDays() {
+  const cont = $("#days-list");
+  cont.innerHTML = "";
+  PLAN.dias.forEach(dia => {
+    const n = dia.ejercicios.length;
+    const card = document.createElement("button");
+    card.className = "day-card";
+    card.innerHTML = `
+      <span class="day-name">${dia.nombre}</span>
+      <span class="day-sub">${dia.subtitulo || ""}</span>
+      <span class="day-count">${n} ejercicios</span>`;
+    card.addEventListener("click", () => openDay(dia));
+    cont.appendChild(card);
+  });
+}
+
+// ---------------- Abrir un día ----------------
+function openDay(dia) {
+  currentDay = dia;
+  exercises = dia.ejercicios.map(ex => resolveExercise(ex, currentUser));
+  currentIndex = 0;
+  $("#ex-day-name").textContent = `${dia.nombre} · ${dia.subtitulo || ""}`;
+  renderExercises();
+  renderDots();
+  showScreen("exercise");
+  requestAnimationFrame(() => scrollToIndex(0, false));
+}
+
+function renderExercises() {
+  const track = $("#exercise-track");
+  track.innerHTML = "";
+  exercises.forEach((ex, i) => {
+    const card = document.createElement("div");
+    card.className = "exercise-card";
+    card.dataset.index = i;
+    card.appendChild(buildExerciseCard(ex, i));
+    track.appendChild(card);
+  });
+}
+
+function buildExerciseCard(ex, index) {
+  const frag = document.createElement("div");
+
+  // Encabezado
+  const header = document.createElement("div");
+  header.className = "ex-header";
+  header.innerHTML = `
+    <h2 class="ex-name">${ex.nombre}</h2>
+    <span class="ex-target">${objetivo(ex)}</span>
+    <p class="ex-cue">${ex.indicacion || ""}</p>
+    ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
+  frag.appendChild(header);
+
+  // Historial
+  const histLabel = document.createElement("div");
+  histLabel.className = "section-label";
+  histLabel.textContent = "Historial";
+  frag.appendChild(histLabel);
+
+  const hist = document.createElement("div");
+  hist.className = "history";
+  hist.id = `hist-${index}`;
+  frag.appendChild(hist);
+  renderHistoryInto(hist, ex.id);
+
+  // Formulario de carga
+  const formLabel = document.createElement("div");
+  formLabel.className = "section-label";
+  formLabel.textContent = "Cargar hoy";
+  frag.appendChild(formLabel);
+
+  const form = document.createElement("div");
+  form.className = "load-form";
+  form.innerHTML = `
+    <div class="input-row">
+      <div class="field">
+        <label>Kg</label>
+        <input type="number" inputmode="decimal" step="0.5" id="kg-${index}" placeholder="—" />
+      </div>
+      <div class="field">
+        <label>RIR</label>
+        <input type="number" inputmode="numeric" step="1" id="rir-${index}" placeholder="—" />
+      </div>
+    </div>
+    <div class="field full">
+      <label>Nota (opcional)</label>
+      <textarea id="nota-${index}" placeholder="Ej: subí 2.5 kg, buena técnica"></textarea>
+    </div>
+    <button class="btn-save" id="save-${index}">Guardar</button>`;
+  frag.appendChild(form);
+
+  form.querySelector(`#save-${index}`).addEventListener("click", () => saveExercise(index));
+  return frag;
+}
+
+function renderHistoryInto(el, exerciseId) {
+  const rows = DB.history(currentUser, exerciseId).slice(0, 8);
+  if (rows.length === 0) {
+    el.innerHTML = `<div class="history-empty">Todavía no hay cargas. ¡Esta es la primera!</div>`;
+    return;
+  }
+  el.innerHTML = rows.map(r => {
+    const kg = (r.kg ?? "") !== "" ? `${r.kg} kg` : "—";
+    const rir = (r.rir ?? "") !== "" ? `RIR ${r.rir}` : "";
+    const nota = r.nota ? `<span class="hist-note">“${r.nota}”</span>` : "";
+    const badge = r._pending ? `<span class="hist-badge">⏳</span>` : "";
+    return `<div class="hist-row ${r._pending ? "pending" : ""}">
+      <span class="hist-date">${fechaCorta(r.fecha)}${badge}</span>
+      <span class="hist-main">${kg}</span>
+      <span class="hist-rir">${rir}</span>
+      ${nota}
+    </div>`;
+  }).join("");
+}
+
+// ---------------- Guardar una carga ----------------
+async function saveExercise(index) {
+  const ex = exercises[index];
+  const kgEl = $(`#kg-${index}`);
+  const rirEl = $(`#rir-${index}`);
+  const notaEl = $(`#nota-${index}`);
+
+  const kg = kgEl.value.trim();
+  const rir = rirEl.value.trim();
+  const nota = notaEl.value.trim();
+
+  if (kg === "" && rir === "") {
+    toast("Cargá al menos kg o RIR");
+    return;
+  }
+
+  await DB.save({
+    fecha: hoyISO(),
+    usuario: currentUser,
+    dia: currentDay.id,
+    ejercicio: ex.id,
+    ejercicio_nombre: ex.nombre,
+    kg: kg === "" ? null : Number(kg),
+    rir: rir === "" ? null : Number(rir),
+    nota: nota || null,
+  });
+
+  // Feedback visual
+  const btn = $(`#save-${index}`);
+  btn.textContent = "✓ Guardado";
+  btn.classList.add("saved");
+  setTimeout(() => { btn.textContent = "Guardar"; btn.classList.remove("saved"); }, 1600);
+
+  // Refrescar historial de esta tarjeta y marcar el punto como hecho
+  renderHistoryInto($(`#hist-${index}`), ex.id);
+  markDotDone(index);
+  renderStatusBar();
+
+  // Si es el último ejercicio del día -> resumen
+  if (index === exercises.length - 1) {
+    setTimeout(() => showSummary(), 700);
+  } else {
+    // Pasar al siguiente ejercicio automáticamente
+    setTimeout(() => scrollToIndex(index + 1, true), 700);
+  }
+}
+
+// ---------------- Carrusel: puntos y flechas ----------------
+function renderDots() {
+  const dots = $("#dots");
+  dots.innerHTML = "";
+  exercises.forEach((_, i) => {
+    const d = document.createElement("div");
+    d.className = "dot" + (i === currentIndex ? " active" : "");
+    d.dataset.index = i;
+    d.addEventListener("click", () => scrollToIndex(i, true));
+    dots.appendChild(d);
+  });
+  updateArrows();
+}
+function markDotDone(index) {
+  const d = $(`#dots .dot[data-index="${index}"]`);
+  if (d) d.classList.add("done");
+}
+function updateDots() {
+  $$("#dots .dot").forEach((d, i) => d.classList.toggle("active", i === currentIndex));
+  updateArrows();
+}
+function updateArrows() {
+  $("#arrow-prev").disabled = currentIndex === 0;
+  $("#arrow-next").disabled = currentIndex === exercises.length - 1;
+}
+
+function scrollToIndex(i, smooth) {
+  i = Math.max(0, Math.min(exercises.length - 1, i));
+  const vp = $("#exercise-viewport");
+  vp.scrollTo({ left: vp.clientWidth * i, behavior: smooth ? "smooth" : "auto" });
+  currentIndex = i;
+  updateDots();
+}
+
+// Actualizar el índice al deslizar (swipe)
+(function attachScrollSync() {
+  const vp = $("#exercise-viewport");
+  let raf = null;
+  vp.addEventListener("scroll", () => {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = null;
+      const i = Math.round(vp.scrollLeft / vp.clientWidth);
+      if (i !== currentIndex) { currentIndex = i; updateDots(); }
+    });
+  });
+})();
+
+$("#arrow-prev").addEventListener("click", () => scrollToIndex(currentIndex - 1, true));
+$("#arrow-next").addEventListener("click", () => scrollToIndex(currentIndex + 1, true));
+
+// ---------------- Resumen de la sesión ----------------
+function showSummary() {
+  const fecha = hoyISO();
+  const registrosHoy = DB.all().filter(
+    r => r.usuario === currentUser && r.dia === currentDay.id && r.fecha === fecha
+  );
+  const porEjercicio = {};
+  registrosHoy.forEach(r => {
+    // el más reciente de hoy por ejercicio
+    if (!porEjercicio[r.ejercicio] ||
+        (r.created_at || "") > (porEjercicio[r.ejercicio].created_at || "")) {
+      porEjercicio[r.ejercicio] = r;
+    }
+  });
+
+  const cont = $("#summary-content");
+  const nombreUser = PLAN.usuarios[currentUser]?.nombre || currentUser;
+  let html = `<h2>${currentDay.nombre} · ${currentDay.subtitulo || ""}</h2>
+    <div class="sum-date">${nombreUser} · ${fechaCorta(fecha)}</div>`;
+
+  exercises.forEach(ex => {
+    const r = porEjercicio[ex.id];
+    if (r) {
+      const kg = (r.kg ?? "") !== "" ? `${r.kg} kg` : "";
+      const rir = (r.rir ?? "") !== "" ? ` · RIR ${r.rir}` : "";
+      html += `<div class="sum-row">
+        <span class="sum-name">${ex.nombre}</span>
+        <span class="sum-val">${kg}${rir}</span>
+      </div>`;
+    } else {
+      html += `<div class="sum-row skipped">
+        <span class="sum-name">${ex.nombre}</span>
+        <span class="sum-val">sin cargar</span>
+      </div>`;
+    }
+  });
+  cont.innerHTML = html;
+  showScreen("summary");
+}
+
+// ---------------- Exportar respaldo ----------------
+function exportBackup() {
+  const data = DB.exportData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const fecha = hoyISO();
+  a.href = url;
+  a.download = `respaldo-gym-${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Respaldo descargado 📁");
+}
+
+// ---------------- Botones de navegación generales ----------------
+$$("[data-goto]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const target = btn.dataset.goto;
+    if (target === "user") { showScreen("user"); }
+    else if (target === "days") { renderDays(); showScreen("days"); }
+  });
+});
+$("#btn-export").addEventListener("click", exportBackup);
+$$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
+
+// ---------------- Arranque ----------------
+async function init() {
+  try {
+    const res = await fetch("./plan.json", { cache: "no-cache" });
+    PLAN = await res.json();
+  } catch (e) {
+    document.body.innerHTML = "<p style='padding:24px'>No se pudo cargar el plan (plan.json).</p>";
+    return;
+  }
+
+  renderStatusBar();
+
+  const last = DB.getLastUser();
+  if (last && PLAN.usuarios[last]) {
+    // Recuerda el último usuario, pero igual mostramos la pantalla inicial
+    // con ese usuario ya resaltado por si querés cambiar.
+    document.body.dataset.user = last;
+  }
+  // Si hay un último usuario, entramos directo a sus días.
+  if (last && PLAN.usuarios[last]) {
+    selectUser(last);
+  } else {
+    showScreen("user");
+  }
+}
+
+init();

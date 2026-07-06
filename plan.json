@@ -1,0 +1,199 @@
+{
+  "_ayuda": "Este archivo es el plan de entrenamiento. Podés editarlo a mano. Cada ejercicio tiene: id (no repetir, sin espacios), nombre, series, reps, indicacion. Si un ejercicio cambia entre Tato y Gabi, usá 'variantes' con una entrada por usuario. Si Tato o Gabi tienen una nota extra en un ejercicio compartido, usá 'notas'.",
+  "usuarios": {
+    "tato": { "nombre": "Tato", "color": "#3B82F6" },
+    "gabi": { "nombre": "Gabi", "color": "#EC4899" }
+  },
+  "dias": [
+    {
+      "id": "dia1",
+      "nombre": "Día 1",
+      "subtitulo": "Inferior pesado + espalda",
+      "ejercicios": [
+        {
+          "id": "d1_back_squat",
+          "nombre": "Back squat",
+          "series": 4,
+          "reps": "5",
+          "indicacion": "Peso pesado. Bajá controlado hasta que el muslo quede paralelo, empujá con el talón."
+        },
+        {
+          "id": "d1_prensa",
+          "nombre": "Prensa",
+          "series": 3,
+          "reps": "10-12",
+          "indicacion": "Rango completo sin bloquear rodillas arriba. Rodillas en línea con los pies."
+        },
+        {
+          "id": "d1_jalon_prono",
+          "nombre": "Jalón en polea prono",
+          "series": 4,
+          "reps": "8-10",
+          "indicacion": "Agarre ancho, palmas al frente. Llevá la barra al pecho tirando con la espalda, no con los brazos."
+        },
+        {
+          "id": "d1_remo_maquina",
+          "nombre": "Remo en máquina",
+          "series": 3,
+          "reps": "10",
+          "indicacion": "Pecho apoyado, juntá los omóplatos al final de cada tirón."
+        },
+        {
+          "id": "d1_quinto",
+          "variantes": {
+            "gabi": {
+              "nombre": "Hip thrust en máquina",
+              "series": 3,
+              "reps": "10-12",
+              "indicacion": "Empujá con el glúteo, pausá arriba 1 segundo apretando."
+            },
+            "tato": {
+              "nombre": "Curl femoral",
+              "series": 3,
+              "reps": "10",
+              "indicacion": "Bajá lento la carga, sentí el estiramiento del isquiotibial."
+            }
+          }
+        },
+        {
+          "id": "d1_sexto",
+          "variantes": {
+            "gabi": {
+              "nombre": "Abducción en máquina",
+              "series": 2,
+              "reps": "15-17",
+              "indicacion": "Torso levemente hacia adelante, abrí con el glúteo medio, sin balancear."
+            },
+            "tato": {
+              "nombre": "Press inclinado con mancuernas",
+              "series": 3,
+              "reps": "8",
+              "indicacion": "Banco inclinado 30°. Bajá controlado hasta el pecho, no choques las mancuernas arriba."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dia2",
+      "nombre": "Día 2",
+      "subtitulo": "Superior + glúteo",
+      "ejercicios": [
+        {
+          "id": "d2_hip_thrust_barra",
+          "nombre": "Hip thrust con barra",
+          "series": 4,
+          "reps": "10",
+          "indicacion": "Barbilla al pecho, extendé la cadera hasta arriba y apretá el glúteo 1 segundo."
+        },
+        {
+          "id": "d2_press_militar_mancuernas",
+          "nombre": "Press militar con mancuernas",
+          "series": 3,
+          "reps": "10",
+          "indicacion": "Sentado o de pie con abdomen firme. Subí sin arquear la espalda."
+        },
+        {
+          "id": "d2_vuelos_laterales",
+          "nombre": "Vuelos laterales",
+          "series": 3,
+          "reps": "12-15",
+          "indicacion": "Codos apenas flexionados, subí hasta la altura del hombro sin usar impulso."
+        },
+        {
+          "id": "d2_remo_polea_baja",
+          "nombre": "Remo en polea baja",
+          "series": 3,
+          "reps": "10-12",
+          "indicacion": "Espalda recta, llevá el mango al abdomen tirando con los codos pegados."
+        },
+        {
+          "id": "d2_superserie_biceps_triceps",
+          "nombre": "Superserie: curl bíceps + tríceps en polea",
+          "series": 3,
+          "reps": "10 + 10",
+          "indicacion": "Hacé curl y sin descanso pasá a tríceps. Descansá recién al terminar los dos."
+        },
+        {
+          "id": "d2_sexto",
+          "variantes": {
+            "gabi": {
+              "nombre": "Peso muerto rumano con mancuernas",
+              "series": 3,
+              "reps": "10-12",
+              "indicacion": "Piernas casi rectas, bajá empujando la cola atrás, sentí el estiramiento."
+            },
+            "tato": {
+              "nombre": "Plancha lateral",
+              "series": 3,
+              "reps": "25 seg por lado",
+              "indicacion": "Cuerpo en línea recta, cadera arriba. Anotá los segundos por lado en kg si querés."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "dia3",
+      "nombre": "Día 3",
+      "subtitulo": "Flexible",
+      "ejercicios": [
+        {
+          "id": "d3_estocadas_bulgaras",
+          "nombre": "Estocadas o búlgaras livianas",
+          "series": 2,
+          "reps": "10 por pierna",
+          "indicacion": "Livianas y controladas. Rodilla de adelante en línea con el pie."
+        },
+        {
+          "id": "d3_jalon_o_remo",
+          "nombre": "Jalón o remo en máquina",
+          "series": 3,
+          "reps": "10-12",
+          "indicacion": "Elegí el que quieras hoy. Tirá con la espalda, controlá la vuelta."
+        },
+        {
+          "id": "d3_press_pecho_maquina",
+          "nombre": "Press de pecho en máquina",
+          "series": 3,
+          "reps": "10",
+          "indicacion": "Empujá sin bloquear los codos, controlá la vuelta.",
+          "notas": {
+            "tato": "Opcional: fondos en paralelas 3 × máximas repeticiones."
+          }
+        },
+        {
+          "id": "d3_ab_wheel",
+          "nombre": "Ab wheel",
+          "series": 3,
+          "reps": "8-10",
+          "indicacion": "Rodá hacia adelante sin arquear la lumbar, mantené el abdomen firme."
+        },
+        {
+          "id": "d3_superserie_biceps_triceps",
+          "nombre": "Superserie: curl bíceps + extensión tríceps",
+          "series": 2,
+          "reps": "12 + 12",
+          "indicacion": "Curl y sin descanso extensión de tríceps. Descansá al terminar los dos."
+        },
+        {
+          "id": "d3_sexto",
+          "variantes": {
+            "gabi": {
+              "nombre": "Frog pump",
+              "series": 2,
+              "reps": "20",
+              "indicacion": "Plantas de los pies juntas, rodillas abiertas. Empujá con el glúteo."
+            },
+            "tato": {
+              "nombre": "Vuelos posteriores en máquina",
+              "series": 2,
+              "reps": "15",
+              "indicacion": "Abrí llevando los codos atrás, apretá el hombro posterior."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
