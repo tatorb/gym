@@ -12,6 +12,7 @@
 const LS_SYNCED  = "gym_synced";   // registros ya guardados en Supabase
 const LS_PENDING = "gym_pending";  // registros esperando subir
 const LS_USER    = "gym_last_user";
+const LS_VIDEOS  = "gym_video_overrides"; // links de video editados desde la app
 
 function load(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
@@ -67,6 +68,18 @@ export const DB = {
 
   getLastUser() { return load(LS_USER, null); },
   setLastUser(u) { store(LS_USER, u); },
+
+  // Link de video editado a mano (se guarda en este teléfono).
+  getVideoOverride(user, exId) {
+    const o = load(LS_VIDEOS, {});
+    return o[`${user}:${exId}`] ?? null;
+  },
+  setVideoOverride(user, exId, url) {
+    const o = load(LS_VIDEOS, {});
+    // "" se guarda a propósito: significa "ocultar el video" aunque el plan tenga uno.
+    o[`${user}:${exId}`] = url || "";
+    store(LS_VIDEOS, o);
+  },
 
   // Todos los registros (subidos + pendientes)
   all() { return [...synced, ...pending]; },

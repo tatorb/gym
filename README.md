@@ -208,6 +208,12 @@ El plan vive en **`plan.json`**. Lo podés editar a mano en GitHub:
    ```
    En ejercicios con `variantes`, poné el `video` dentro de la variante de cada uno
    (Tato y Gabi pueden tener videos distintos).
+
+   **Desde la app también podés:** debajo de cada video hay botones para verlo en
+   **pantalla completa**, abrirlo en **YouTube**, o **editar el link** (✎). Si el
+   ejercicio no tiene video, aparece **➕ Agregar video**. Ojo: los cambios hechos
+   desde la app se guardan **solo en ese teléfono**. Para que el video quede fijo
+   para los dos y en todos los dispositivos, ponelo acá en `plan.json`.
 5. Si querés una nota solo para uno en un ejercicio compartido, se usa `notas`:
    ```json
    "notas": { "tato": "Opcional: fondos en paralelas 3 × máximas." }

@@ -66,37 +66,128 @@ function youtubeId(url) {
   }
 }
 
+// El video efectivo: primero el link editado a mano, si no el del plan.
+//  - sin override (null)      -> usa el del plan
+//  - override "" (ocultado)   -> sin video
+//  - override con link        -> usa ese link
+function effectiveVideo(ex) {
+  const ov = DB.getVideoOverride(currentUser, ex.id);
+  if (ov === null) return ex.video || null;
+  return ov || null;
+}
+
+// HTML del reproductor de YouTube embebido.
+function ytEmbedHTML(id) {
+  return `<div class="video-frame">
+    <iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1&playsinline=1"
+      title="Video del ejercicio" loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen></iframe>
+  </div>`;
+}
+
 // Construye el bloque de video de una tarjeta de ejercicio.
-function buildVideoBlock(url) {
+function buildVideoBlock(ex) {
   const wrap = document.createElement("div");
   wrap.className = "video-block";
+  renderVideoInto(wrap, ex);
+  return wrap;
+}
+
+function renderVideoInto(wrap, ex) {
+  wrap.innerHTML = "";
+  const url = effectiveVideo(ex);
+
+  // Sin video: opción discreta para agregar uno.
+  if (!url) {
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "video-add";
+    add.textContent = "➕ Agregar video";
+    add.addEventListener("click", () => editVideo(ex, wrap));
+    wrap.appendChild(add);
+    return;
+  }
+
   const id = youtubeId(url);
+  const player = document.createElement("div");
+  player.className = "video-player";
   if (id) {
-    // YouTube: mostramos una portada y al tocar se embebe el reproductor.
-    wrap.innerHTML = `
+    // YouTube: portada; al tocar se embebe el reproductor.
+    player.innerHTML = `
       <button type="button" class="video-facade">
         <span class="video-play">▶</span>
         <span class="video-label">Ver video</span>
       </button>`;
-    wrap.querySelector("button").addEventListener("click", () => {
-      wrap.innerHTML = `<div class="video-frame">
-        <iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1&playsinline=1"
-          title="Video del ejercicio" loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen></iframe>
-      </div>`;
+    player.querySelector("button").addEventListener("click", () => {
+      player.innerHTML = ytEmbedHTML(id);
     });
   } else {
-    // Otro sitio: solo un botón que abre el link.
+    // Otro sitio: no se embebe, solo botón que abre el link.
     const a = document.createElement("a");
     a.className = "video-link-btn";
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
+    a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
     a.innerHTML = `▶ Ver video <span class="video-link-hint">(abre en otra pestaña)</span>`;
-    wrap.appendChild(a);
+    player.appendChild(a);
   }
-  return wrap;
+  wrap.appendChild(player);
+
+  // Fila de opciones
+  const actions = document.createElement("div");
+  actions.className = "video-actions";
+
+  if (id) {
+    const fs = document.createElement("button");
+    fs.type = "button"; fs.className = "vaction";
+    fs.innerHTML = "⤢ Pantalla completa";
+    fs.addEventListener("click", () => openFullscreen(player, id));
+    actions.appendChild(fs);
+  }
+
+  const yt = document.createElement("a");
+  yt.className = "vaction"; yt.target = "_blank"; yt.rel = "noopener noreferrer";
+  yt.href = id ? `https://www.youtube.com/watch?v=${id}` : url;
+  yt.innerHTML = id ? "↗ YouTube" : "↗ Abrir link";
+  actions.appendChild(yt);
+
+  const ed = document.createElement("button");
+  ed.type = "button"; ed.className = "vaction";
+  ed.innerHTML = "✎ Editar link";
+  ed.addEventListener("click", () => editVideo(ex, wrap));
+  actions.appendChild(ed);
+
+  wrap.appendChild(actions);
+}
+
+// Editar / agregar / quitar el link del video (se guarda en este teléfono).
+function editVideo(ex, wrap) {
+  const ov = DB.getVideoOverride(currentUser, ex.id);
+  const actual = ov === null ? (ex.video || "") : ov;
+  const nuevo = prompt(
+    "Pegá el link del video (YouTube u otro sitio).\nDejalo vacío para quitar el video.",
+    actual
+  );
+  if (nuevo === null) return; // canceló
+  const val = nuevo.trim();
+  DB.setVideoOverride(currentUser, ex.id, val);
+  renderVideoInto(wrap, ex);
+  toast(val ? "Video actualizado en este teléfono" : "Video quitado");
+}
+
+// Pantalla completa del reproductor.
+function openFullscreen(player, id) {
+  let frame = player.querySelector(".video-frame");
+  if (!frame) {                       // si aún no se cargó, lo cargamos
+    player.innerHTML = ytEmbedHTML(id);
+    frame = player.querySelector(".video-frame");
+  }
+  const req = frame.requestFullscreen || frame.webkitRequestFullscreen;
+  if (req) {
+    try { req.call(frame); } catch { /* ignorar */ }
+  } else {
+    // iPhone no permite pantalla completa por código: se usa el botón del reproductor.
+    toast("Tocá ▶ y usá el botón de pantalla completa del video");
+  }
 }
 
 // Etiqueta/unidad de cada tipo de medida.
@@ -211,8 +302,8 @@ function buildExerciseCard(ex, index) {
     ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
   frag.appendChild(header);
 
-  // Video (si el ejercicio tiene uno cargado)
-  if (ex.video) frag.appendChild(buildVideoBlock(ex.video));
+  // Video (reproductor + opciones; o botón para agregar si no hay)
+  frag.appendChild(buildVideoBlock(ex));
 
   // Historial
   const histLabel = document.createElement("div");

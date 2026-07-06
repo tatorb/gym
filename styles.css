@@ -167,6 +167,23 @@ body[data-user="gabi"] { --accent: #EC4899; --accent-soft: rgba(236,72,153,0.16)
 .video-link-btn:active { background: var(--accent-soft); }
 .video-link-hint { color: var(--text-faint); font-weight: 400; font-size: 13px; }
 
+/* Opciones del video */
+.video-actions { display: flex; gap: 8px; margin-top: 10px; }
+.vaction {
+  flex: 1; min-width: 0; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  background: var(--bg-elev); border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 10px; padding: 11px 6px; font-size: 13px; font-weight: 600;
+  white-space: nowrap;
+}
+.vaction:active { background: var(--bg-elev-2); }
+.video-add {
+  width: 100%; background: transparent;
+  border: 1px dashed var(--border); color: var(--text-faint);
+  border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 600;
+}
+.video-add:active { background: var(--bg-elev); }
+
 /* Historial */
 .history { display: flex; flex-direction: column; gap: 8px; }
 .history-empty { color: var(--text-faint); font-size: 14px; padding: 6px 0; }
