@@ -22,6 +22,7 @@
           "nombre": "Prensa",
           "series": 3,
           "reps": "10-12",
+          "video": "https://youtube.com/shorts/EotSw18oR9w?si=1mxtOosmFf1d27eO",
           "indicacion": "Rango completo sin bloquear rodillas arriba. Rodillas en línea con los pies."
         },
         {
@@ -45,12 +46,14 @@
               "nombre": "Hip thrust en máquina",
               "series": 3,
               "reps": "10-12",
+              "video": "https://youtube.com/shorts/m8g9VogoxMo?si=20e_y43zgZr_yvNi",
               "indicacion": "Empujá con el glúteo, pausá arriba 1 segundo apretando."
             },
             "tato": {
               "nombre": "Curl femoral",
               "series": 3,
               "reps": "10",
+              "video": "https://youtube.com/shorts/xB1lGVzRwWk?si=NnmIiwikqx5xKLmo",
               "indicacion": "Bajá lento la carga, sentí el estiramiento del isquiotibial."
             }
           }
@@ -62,6 +65,7 @@
               "nombre": "Abducción en máquina",
               "series": 2,
               "reps": "15-17",
+              "video": "https://youtube.com/shorts/HJLzMM_naPg?si=wPrDR0oQpSrtzx_I",
               "indicacion": "Torso levemente hacia adelante, abrí con el glúteo medio, sin balancear."
             },
             "tato": {
@@ -84,6 +88,7 @@
           "nombre": "Hip thrust con barra",
           "series": 4,
           "reps": "10",
+          "video": "https://youtube.com/shorts/42lU8xsumBo?si=nWOtgWYdnblTYTj1",
           "indicacion": "Barbilla al pecho, extendé la cadera hasta arriba y apretá el glúteo 1 segundo."
         },
         {
@@ -91,6 +96,7 @@
           "nombre": "Press militar con mancuernas",
           "series": 3,
           "reps": "10",
+          "video": "https://youtube.com/shorts/k6tzKisR3NY?si=bLiQzYz6L23_D3yL",
           "indicacion": "Sentado o de pie con abdomen firme. Subí sin arquear la espalda."
         },
         {
@@ -98,6 +104,7 @@
           "nombre": "Vuelos laterales",
           "series": 3,
           "reps": "12-15",
+          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs?si=QLKstGFenMsNRQr4",
           "indicacion": "Codos apenas flexionados, subí hasta la altura del hombro sin usar impulso."
         },
         {
@@ -121,6 +128,7 @@
               "nombre": "Peso muerto rumano con mancuernas",
               "series": 3,
               "reps": "10-12",
+              "video": "https://youtube.com/shorts/VB6Wu90UHZA?feature=shared",
               "indicacion": "Piernas casi rectas, bajá empujando la cola atrás, sentí el estiramiento."
             },
             "tato": {
@@ -144,6 +152,7 @@
           "nombre": "Estocadas o búlgaras livianas",
           "series": 2,
           "reps": "10 por pierna",
+          "video": "https://youtu.be/QE4Bc1t9Evs?si=imUs5dodVOs7fIkq",
           "indicacion": "Livianas y controladas. Rodilla de adelante en línea con el pie."
         },
         {
@@ -186,6 +195,7 @@
               "series": 2,
               "reps": "20",
               "medida": "reps",
+              "video": "https://youtu.be/4M_-vB5SXXE?si=k9ceMI1Zele7udSB",
               "indicacion": "Plantas de los pies juntas, rodillas abiertas. Empujá con el glúteo."
             },
             "tato": {
