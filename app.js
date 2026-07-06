@@ -41,10 +41,62 @@ function resolveExercise(ex, user) {
     indicacion: base.indicacion,
     notaUsuario: nota,
     medida: base.medida || "kg",   // 'kg' | 'reps' | 'seg' (posición inicial del toggle)
+    video: base.video || null,     // URL del video (YouTube = embebido; otro sitio = botón)
   };
 }
 function objetivo(ex) {
   return `${ex.series} × ${ex.reps}`;
+}
+
+// Si la URL es de YouTube, devuelve el ID del video; si no, null.
+function youtubeId(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") return u.pathname.slice(1).split("/")[0] || null;
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
+      if (u.pathname === "/watch") return u.searchParams.get("v");
+      const parts = u.pathname.split("/").filter(Boolean); // embed/ID, shorts/ID, v/ID, live/ID
+      const i = parts.findIndex(p => ["embed", "shorts", "v", "live"].includes(p));
+      if (i >= 0 && parts[i + 1]) return parts[i + 1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Construye el bloque de video de una tarjeta de ejercicio.
+function buildVideoBlock(url) {
+  const wrap = document.createElement("div");
+  wrap.className = "video-block";
+  const id = youtubeId(url);
+  if (id) {
+    // YouTube: mostramos una portada y al tocar se embebe el reproductor.
+    wrap.innerHTML = `
+      <button type="button" class="video-facade">
+        <span class="video-play">▶</span>
+        <span class="video-label">Ver video</span>
+      </button>`;
+    wrap.querySelector("button").addEventListener("click", () => {
+      wrap.innerHTML = `<div class="video-frame">
+        <iframe src="https://www.youtube-nocookie.com/embed/${id}?rel=0&autoplay=1&playsinline=1"
+          title="Video del ejercicio" loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+      </div>`;
+    });
+  } else {
+    // Otro sitio: solo un botón que abre el link.
+    const a = document.createElement("a");
+    a.className = "video-link-btn";
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.innerHTML = `▶ Ver video <span class="video-link-hint">(abre en otra pestaña)</span>`;
+    wrap.appendChild(a);
+  }
+  return wrap;
 }
 
 // Etiqueta/unidad de cada tipo de medida.
@@ -158,6 +210,9 @@ function buildExerciseCard(ex, index) {
     <p class="ex-cue">${ex.indicacion || ""}</p>
     ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
   frag.appendChild(header);
+
+  // Video (si el ejercicio tiene uno cargado)
+  if (ex.video) frag.appendChild(buildVideoBlock(ex.video));
 
   // Historial
   const histLabel = document.createElement("div");

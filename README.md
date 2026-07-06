@@ -200,7 +200,15 @@ El plan vive en **`plan.json`**. Lo podés editar a mano en GitHub:
      "tato": { "nombre": "Curl femoral", "series": 3, "reps": "10", "indicacion": "..." }
    }
    ```
-4. Si querés una nota solo para uno en un ejercicio compartido, se usa `notas`:
+4. **Video del ejercicio:** agregá un campo `video` con la URL. Si es de
+   **YouTube**, se ve embebido dentro de la app (botón "Ver video"). Si es de
+   **otro sitio**, aparece un botón que abre el link en otra pestaña.
+   ```json
+   { "nombre": "Back squat", "series": 4, "reps": "5", "video": "https://youtu.be/XXXX", "indicacion": "..." }
+   ```
+   En ejercicios con `variantes`, poné el `video` dentro de la variante de cada uno
+   (Tato y Gabi pueden tener videos distintos).
+5. Si querés una nota solo para uno en un ejercicio compartido, se usa `notas`:
    ```json
    "notas": { "tato": "Opcional: fondos en paralelas 3 × máximas." }
    ```
