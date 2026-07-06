@@ -14,9 +14,9 @@
 // ============================================================
 
 window.CONFIG = {
-  // 1) La URL de tu proyecto. Se ve como: https://abcdefgh.supabase.co
-  SUPABASE_URL: "PEGA_ACA_TU_PROJECT_URL",
+  // 1) La URL de tu proyecto.
+  SUPABASE_URL: "https://yctambughgkuoxamuuqj.supabase.co",
 
-  // 2) La clave pública "anon". Es un texto largo que arranca con "eyJ..."
-  SUPABASE_ANON_KEY: "PEGA_ACA_TU_ANON_KEY",
+  // 2) La clave pública (publishable). Segura de compartir.
+  SUPABASE_ANON_KEY: "sb_publishable_OdS_gWXbYaipCYivK3rY9w_RbdmYNos",
 };
