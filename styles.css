@@ -188,16 +188,19 @@ body[data-user="gabi"] { --accent: #EC4899; --accent-soft: rgba(236,72,153,0.16)
 .history { display: flex; flex-direction: column; gap: 8px; }
 .history-empty { color: var(--text-faint); font-size: 14px; padding: 6px 0; }
 .hist-row {
-  display: flex; align-items: baseline; gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   background: var(--bg-elev); border: 1px solid var(--border);
-  border-radius: 12px; padding: 10px 14px;
+  border-radius: 12px; padding: 10px 14px; cursor: pointer;
 }
+.hist-row:active { background: var(--bg-elev-2); }
 .hist-row.pending { border-color: #6a5220; }
 .hist-date { font-size: 13px; color: var(--text-dim); flex: 0 0 auto; width: 74px; }
 .hist-main { font-weight: 700; font-size: 16px; }
 .hist-rir { color: var(--text-dim); font-weight: 600; font-size: 14px; }
-.hist-note { color: var(--text-faint); font-size: 13px; margin-left: auto; font-style: italic; max-width: 45%; text-align: right; }
+.hist-spacer { flex: 1; }
+.hist-note { color: var(--text-faint); font-size: 13px; font-style: italic; max-width: 45%; text-align: right; }
 .hist-badge { font-size: 11px; color: #ffcf8a; margin-left: 6px; }
+.hist-edit { color: var(--text-faint); font-size: 14px; flex: 0 0 auto; }
 
 /* Formulario de carga */
 .load-form { margin-top: 6px; }
@@ -288,7 +291,50 @@ body[data-user="gabi"] { --accent: #EC4899; --accent-soft: rgba(236,72,153,0.16)
 }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
+/* ===================== SELECTOR DE PERSONA ===================== */
+.user-switch {
+  display: flex; gap: 6px; padding: 10px 16px 0;
+}
+.uswitch-btn {
+  flex: 1; border: 1px solid var(--border); background: var(--bg-elev);
+  color: var(--text-dim); border-radius: 12px; padding: 11px;
+  font-size: 15px; font-weight: 700;
+}
+.uswitch-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.uswitch-btn:active { filter: brightness(1.1); }
+
+/* ===================== VENTANA DE EDICIÓN (modal) ===================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.modal {
+  width: 100%; max-width: 520px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-top-left-radius: 22px; border-top-right-radius: 22px;
+  padding: 20px 18px calc(20px + var(--safe-bottom));
+  max-height: 92dvh; overflow-y: auto;
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal h3 { margin: 0 0 2px; font-size: 20px; }
+.modal-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 16px; }
+.modal-row { display: flex; gap: 12px; margin-top: 12px; }
+.btn-ghost {
+  flex: 1; background: var(--bg-elev-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700;
+}
+.btn-ghost:active { filter: brightness(1.2); }
+.btn-danger {
+  flex: 1; background: transparent; border: 1px solid var(--danger);
+  color: var(--danger); border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700;
+}
+.btn-danger:active { background: rgba(239,68,68,0.12); }
+
 /* Pantallas grandes: centrar el contenido como en un teléfono */
 @media (min-width: 640px) {
   .exercise-card { width: 100%; }
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: 22px; }
 }

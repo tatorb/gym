@@ -273,8 +273,61 @@ function openDay(dia) {
   $("#ex-day-name").textContent = `${dia.nombre} · ${dia.subtitulo || ""}`;
   renderExercises();
   renderDots();
+  renderUserSwitch();
+  refreshDoneDots();
   showScreen("exercise");
   requestAnimationFrame(() => scrollToIndex(0, false));
+  DB.refresh().then(ok => { if (ok) refreshVisibleHistories(); });
+}
+
+// ---------------- Cambiar de persona (mismo día y nº de ejercicio) ----------------
+function renderUserSwitch() {
+  const el = $("#user-switch");
+  el.innerHTML = "";
+  Object.keys(PLAN.usuarios).forEach(u => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "uswitch-btn" + (u === currentUser ? " on" : "");
+    b.textContent = PLAN.usuarios[u].nombre;
+    b.addEventListener("click", () => { if (u !== currentUser) switchUserSameExercise(u); });
+    el.appendChild(b);
+  });
+}
+
+function switchUserSameExercise(user) {
+  const idx = currentIndex;
+  currentUser = user;
+  DB.setLastUser(user);
+  document.body.dataset.user = user;
+  $("#days-user-name").textContent = PLAN.usuarios[user]?.nombre || user;
+  exercises = currentDay.ejercicios.map(ex => resolveExercise(ex, user));
+  currentIndex = Math.min(idx, exercises.length - 1);
+  renderExercises();
+  renderDots();
+  renderUserSwitch();
+  refreshDoneDots();
+  requestAnimationFrame(() => scrollToIndex(currentIndex, false));
+  toast(`Viendo a ${PLAN.usuarios[user]?.nombre || user}`);
+}
+
+// Marca como "hecho" los puntos de los ejercicios ya cargados hoy por este usuario.
+function refreshDoneDots() {
+  const fecha = hoyISO();
+  const hechos = new Set(
+    DB.all()
+      .filter(r => r.usuario === currentUser && r.dia === currentDay.id && r.fecha === fecha)
+      .map(r => r.ejercicio)
+  );
+  $$("#dots .dot").forEach((d, i) => d.classList.toggle("done", hechos.has(exercises[i]?.id)));
+}
+
+// Re-dibuja los historiales visibles (ej: después de bajar datos del server).
+function refreshVisibleHistories() {
+  exercises.forEach((ex, i) => {
+    const el = $(`#hist-${i}`);
+    if (el) renderHistoryInto(el, ex.id);
+  });
+  refreshDoneDots();
 }
 
 function renderExercises() {
@@ -376,13 +429,101 @@ function renderHistoryInto(el, exerciseId) {
     const rir = (r.rir ?? "") !== "" ? `RIR ${r.rir}` : "";
     const nota = r.nota ? `<span class="hist-note">“${r.nota}”</span>` : "";
     const badge = r._pending ? `<span class="hist-badge">⏳</span>` : "";
-    return `<div class="hist-row ${r._pending ? "pending" : ""}">
+    return `<div class="hist-row ${r._pending ? "pending" : ""}" data-id="${r.id}">
       <span class="hist-date">${fechaCorta(r.fecha)}${badge}</span>
       <span class="hist-main">${kg}</span>
       <span class="hist-rir">${rir}</span>
+      <span class="hist-spacer"></span>
       ${nota}
+      <span class="hist-edit">✎</span>
     </div>`;
   }).join("");
+
+  // Tocar una fila abre el editor de esa carga.
+  el.querySelectorAll(".hist-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const rec = DB.all().find(r => r.id === row.dataset.id);
+      if (rec) openEditModal(rec, () => { renderHistoryInto(el, exerciseId); refreshDoneDots(); });
+    });
+  });
+}
+
+// ---------------- Editar / eliminar una carga ----------------
+function openEditModal(rec, onDone) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  const med = rec.medida || "kg";
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Editar carga</h3>
+      <div class="modal-sub">${rec.ejercicio_nombre || ""} · ${fechaCorta(rec.fecha)}</div>
+      <div class="metric-toggle" id="m-toggle" data-medida="${med}">
+        ${Object.keys(MEDIDAS).map(m =>
+          `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
+        ).join("")}
+      </div>
+      <div class="input-row">
+        <div class="field">
+          <label id="m-vlabel">${MEDIDAS[med]}</label>
+          <input type="number" inputmode="decimal" step="0.5" id="m-val" value="${rec.kg ?? ""}" />
+        </div>
+        <div class="field">
+          <label>RIR</label>
+          <input type="number" inputmode="numeric" step="1" id="m-rir" value="${rec.rir ?? ""}" />
+        </div>
+      </div>
+      <div class="field full">
+        <label>Nota (opcional)</label>
+        <textarea id="m-nota">${rec.nota ? String(rec.nota).replace(/</g, "&lt;") : ""}</textarea>
+      </div>
+      <button class="btn-save" id="m-save">Guardar cambios</button>
+      <div class="modal-row">
+        <button class="btn-ghost" id="m-cancel">Cancelar</button>
+        <button class="btn-danger" id="m-delete">Eliminar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+  overlay.querySelectorAll("#m-toggle button").forEach(b => {
+    b.addEventListener("click", () => {
+      const m = b.dataset.m;
+      overlay.querySelector("#m-toggle").dataset.medida = m;
+      overlay.querySelectorAll("#m-toggle button").forEach(x => x.classList.toggle("on", x === b));
+      overlay.querySelector("#m-vlabel").textContent = MEDIDAS[m];
+    });
+  });
+
+  overlay.querySelector("#m-cancel").addEventListener("click", close);
+
+  overlay.querySelector("#m-save").addEventListener("click", async () => {
+    const medida = overlay.querySelector("#m-toggle").dataset.medida;
+    const val = overlay.querySelector("#m-val").value.trim();
+    const rir = overlay.querySelector("#m-rir").value.trim();
+    const nota = overlay.querySelector("#m-nota").value.trim();
+    if (val === "" && rir === "") { toast(`Cargá ${MEDIDAS[medida].toLowerCase()} o RIR`); return; }
+    await DB.update(rec.id, {
+      medida,
+      kg: val === "" ? null : Number(val),
+      rir: rir === "" ? null : Number(rir),
+      nota: nota || null,
+    });
+    close();
+    renderStatusBar();
+    onDone && onDone();
+    toast("Carga actualizada");
+  });
+
+  overlay.querySelector("#m-delete").addEventListener("click", async () => {
+    if (!confirm("¿Eliminar esta carga? No se puede deshacer.")) return;
+    await DB.remove(rec.id);
+    close();
+    renderStatusBar();
+    onDone && onDone();
+    toast("Carga eliminada");
+  });
 }
 
 // ---------------- Guardar una carga ----------------

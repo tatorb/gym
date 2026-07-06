@@ -2,21 +2,22 @@
 //  db.js  —  Base de datos + funcionamiento sin internet
 // ============================================================
 //  Idea general:
-//   - Todo lo que guardás va PRIMERO a la memoria del teléfono
-//     (localStorage). Así funciona aunque no haya señal.
-//   - Cuando hay internet, se sube a Supabase solo.
-//   - El historial que ves es: lo que está en Supabase + lo que
-//     todavía no se subió (pendiente).
+//   - Todo (guardar, editar, borrar) pasa PRIMERO por la memoria
+//     del teléfono (localStorage). Así funciona aunque no haya señal.
+//   - Cada cambio se anota en una "cola de salida" (outbox).
+//   - Cuando hay internet, la cola se envía a Supabase sola.
 // ============================================================
 
-const LS_SYNCED  = "gym_synced";   // registros ya guardados en Supabase
-const LS_PENDING = "gym_pending";  // registros esperando subir
+const LS_RECORDS = "gym_records";  // vista local de los registros
+const LS_OUTBOX  = "gym_outbox";   // cambios pendientes de enviar a Supabase
 const LS_USER    = "gym_last_user";
 const LS_VIDEOS  = "gym_video_overrides"; // links de video editados desde la app
 
 function load(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-  catch { return fallback; }
+  try {
+    const v = localStorage.getItem(key);
+    return v === null ? fallback : (JSON.parse(v) ?? fallback);
+  } catch { return fallback; }
 }
 function store(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
@@ -29,8 +30,19 @@ function uuid() {
   });
 }
 
-let synced = load(LS_SYNCED, []);
-let pending = load(LS_PENDING, []);
+let records = load(LS_RECORDS, null);
+let outbox  = load(LS_OUTBOX, []);
+
+// Migración desde el formato anterior (gym_synced / gym_pending), si existiera.
+if (records === null) {
+  const oldSynced = load("gym_synced", []);
+  const oldPending = load("gym_pending", []);
+  records = [...oldSynced, ...oldPending].map(({ _pending, ...r }) => r);
+  outbox = oldPending.map(({ _pending, ...r }) => ({ op: "insert", id: r.id, row: r }));
+  store(LS_RECORDS, records);
+  store(LS_OUTBOX, outbox);
+}
+
 let client = null;        // cliente de Supabase (se crea cuando hay internet)
 let statusCb = () => {};
 
@@ -40,7 +52,6 @@ const isConfigured = () =>
   !cfg.SUPABASE_URL.startsWith("PEGA_") &&
   !cfg.SUPABASE_ANON_KEY.startsWith("PEGA_");
 
-// Crea el cliente de Supabase de forma perezosa (solo si hay internet).
 async function getClient() {
   if (client) return client;
   if (!isConfigured() || !navigator.onLine) return null;
@@ -55,38 +66,63 @@ async function getClient() {
   }
 }
 
-function setStatus(state, extra) {
-  statusCb(state, { pending: pending.length, ...extra });
+function persist() { store(LS_RECORDS, records); store(LS_OUTBOX, outbox); }
+function setStatus(state, extra) { statusCb(state, { pending: outbox.length, ...extra }); }
+function isPending(id) { return outbox.some(o => o.id === id); }
+
+// Devuelve los registros con la marca _pending calculada.
+function view() { return records.map(r => ({ ...r, _pending: isPending(r.id) })); }
+
+// ---- Cola de salida (outbox) ----
+function queueInsert(rec) {
+  outbox.push({ op: "insert", id: rec.id, row: { ...rec } });
+}
+function queueUpdate(id, fields) {
+  const ins = outbox.find(o => o.id === id && o.op === "insert");
+  if (ins) { Object.assign(ins.row, fields); return; }   // aún no subido: edito el insert
+  const upd = outbox.find(o => o.id === id && o.op === "update");
+  if (upd) { Object.assign(upd.fields, fields); return; }
+  outbox.push({ op: "update", id, fields: { ...fields } });
+}
+function queueDelete(id) {
+  const hadInsert = outbox.some(o => o.id === id && o.op === "insert");
+  outbox = outbox.filter(o => o.id !== id);              // descarto insert/update pendientes
+  if (!hadInsert) outbox.push({ op: "delete", id });     // si nunca se subió, no hay nada que borrar allá
+}
+
+// Reconstruye la vista local a partir de los datos del server + la cola pendiente.
+function reapplyOutbox(serverRows) {
+  const map = new Map(serverRows.map(r => [r.id, { ...r }]));
+  for (const op of outbox) {
+    if (op.op === "insert") map.set(op.id, { ...op.row });
+    else if (op.op === "update") { const r = map.get(op.id); if (r) Object.assign(r, op.fields); }
+    else if (op.op === "delete") map.delete(op.id);
+  }
+  return [...map.values()];
 }
 
 // ---- API pública ----
-
 export const DB = {
   onStatus(cb) { statusCb = cb; },
-
   configured: isConfigured,
 
   getLastUser() { return load(LS_USER, null); },
   setLastUser(u) { store(LS_USER, u); },
 
-  // Link de video editado a mano (se guarda en este teléfono).
   getVideoOverride(user, exId) {
     const o = load(LS_VIDEOS, {});
     return o[`${user}:${exId}`] ?? null;
   },
   setVideoOverride(user, exId, url) {
     const o = load(LS_VIDEOS, {});
-    // "" se guarda a propósito: significa "ocultar el video" aunque el plan tenga uno.
     o[`${user}:${exId}`] = url || "";
     store(LS_VIDEOS, o);
   },
 
-  // Todos los registros (subidos + pendientes)
-  all() { return [...synced, ...pending]; },
+  all() { return view(); },
 
-  // Historial de un ejercicio para un usuario, más reciente arriba.
   history(user, exerciseId) {
-    return this.all()
+    return view()
       .filter(r => r.usuario === user && r.ejercicio === exerciseId)
       .sort((a, b) => {
         if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
@@ -94,22 +130,38 @@ export const DB = {
       });
   },
 
-  // Guarda una carga. Devuelve el registro creado.
+  // Crear una carga.
   async save(data) {
-    const rec = {
-      id: uuid(),
-      created_at: new Date().toISOString(),
-      _pending: true,
-      ...data,
-    };
-    pending.push(rec);
-    store(LS_PENDING, pending);
+    const rec = { id: uuid(), created_at: new Date().toISOString(), ...data };
+    records.push(rec);
+    queueInsert(rec);
+    persist();
     setStatus("saved");
-    this.sync(); // intenta subir (sin bloquear)
+    this.sync();
     return rec;
   },
 
-  // Baja de Supabase todo lo que haya y refresca la memoria local.
+  // Editar una carga existente.
+  async update(id, fields) {
+    const r = records.find(x => x.id === id);
+    if (!r) return;
+    Object.assign(r, fields);
+    queueUpdate(id, fields);
+    persist();
+    setStatus("saved");
+    this.sync();
+  },
+
+  // Eliminar una carga.
+  async remove(id) {
+    records = records.filter(x => x.id !== id);
+    queueDelete(id);
+    persist();
+    setStatus("saved");
+    this.sync();
+  },
+
+  // Baja de Supabase todo y reconstruye la vista local.
   async refresh() {
     const c = await getClient();
     if (!c) return false;
@@ -120,52 +172,50 @@ export const DB = {
       .order("fecha", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) { setStatus("error", { message: error.message }); return false; }
-    synced = (data || []).map(r => ({ ...r, _pending: false }));
-    store(LS_SYNCED, synced);
-    // Si algún pendiente ya está en el servidor, lo sacamos de la cola.
-    const serverIds = new Set(synced.map(r => r.id));
-    pending = pending.filter(p => !serverIds.has(p.id));
-    store(LS_PENDING, pending);
-    setStatus("idle");
+    records = reapplyOutbox(data || []);
+    persist();
+    setStatus(outbox.length ? "syncing" : "idle");
+    if (outbox.length) this.sync();
     return true;
   },
 
-  // Sube los registros pendientes a Supabase.
+  // Envía la cola de cambios a Supabase, en orden.
   async sync() {
-    if (pending.length === 0) return;
+    if (outbox.length === 0) return;
     const c = await getClient();
-    if (!c) return; // sin internet: quedan en la cola
+    if (!c) return; // sin internet: la cola espera
     setStatus("syncing");
-    const cola = [...pending];
-    for (const rec of cola) {
-      const row = { ...rec };
-      delete row._pending;
-      const { error } = await c.from("registros").insert(row);
-      // 23505 = clave duplicada = ya estaba subido -> lo damos por subido
-      if (!error || error.code === "23505") {
-        pending = pending.filter(p => p.id !== rec.id);
-        synced.push({ ...rec, _pending: false });
-        store(LS_PENDING, pending);
-        store(LS_SYNCED, synced);
-      } else {
-        setStatus("error", { message: error.message });
-        return; // paramos; reintentamos cuando vuelva la conexión
+    while (outbox.length) {
+      const op = outbox[0];
+      let error = null;
+      if (op.op === "insert") {
+        const { error: e } = await c.from("registros").insert(op.row);
+        error = (e && e.code !== "23505") ? e : null; // 23505 = ya estaba subido
+      } else if (op.op === "update") {
+        const { error: e } = await c.from("registros").update(op.fields).eq("id", op.id);
+        error = e;
+      } else if (op.op === "delete") {
+        const { error: e } = await c.from("registros").delete().eq("id", op.id);
+        error = e;
       }
+      if (error) { setStatus("error", { message: error.message }); return; }
+      outbox.shift();
+      store(LS_OUTBOX, outbox);
     }
     setStatus("idle");
   },
 
-  pendingCount() { return pending.length; },
+  pendingCount() { return outbox.length; },
 
-  // Exporta TODO el historial a un objeto para respaldo.
   exportData() {
+    const all = view();
     return {
       exportado: new Date().toISOString(),
-      total: this.all().length,
-      registros: this.all().map(({ _pending, ...r }) => r),
+      total: all.length,
+      registros: all.map(({ _pending, ...r }) => r),
     };
   },
 };
 
-// Cuando vuelve internet, intentamos sincronizar solos.
+// Cuando vuelve internet, sincronizamos solos.
 window.addEventListener("online", () => { DB.refresh().then(() => DB.sync()); });

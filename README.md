@@ -175,6 +175,12 @@ Listo: ahora abrís la app tocando su ícono, como cualquier otra app.
   estás (ej: 3 de 6).
 - **Guardar:** al terminar el **último** ejercicio del día, aparece un **resumen**
   de toda la sesión.
+- **Cambiar de persona sin salir:** abajo, arriba de las flechas, hay un selector
+  **Tato / Gabi**. Al tocarlo saltás al **mismo número de ejercicio del mismo día**
+  de la otra persona (útil si entrenan juntos y van comparando).
+- **Corregir una carga:** tocá cualquier fila del **historial** (tiene el ícono ✎).
+  Se abre una ventana para **editar** los datos (kg/reps/seg, RIR, nota) o
+  **eliminar** esa carga. Los cambios también se sincronizan con Supabase.
 - **Sin internet en el gimnasio:** cargá tranquilo. La app **guarda en el teléfono**
   (vas a ver un cartel naranja y un ⏳ en el historial). Cuando volvés a tener
   señal, **sube todo solo** a Supabase.
