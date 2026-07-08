@@ -178,6 +178,13 @@ Listo: ahora abrís la app tocando su ícono, como cualquier otra app.
 - **Cambiar de persona sin salir:** abajo, arriba de las flechas, hay un selector
   **Tato / Gabi**. Al tocarlo saltás al **mismo número de ejercicio del mismo día**
   de la otra persona (útil si entrenan juntos y van comparando).
+- **Carga y RIR obligatorios:** para guardar tenés que completar **los dos** (en
+  ejercicios por segundos, el RIR no se pide). Podés navegar entre ejercicios sin
+  completar nada; la obligación es solo al momento de guardar.
+- **No perdés datos a medio cargar:** si escribiste algo y te vas a otro ejercicio
+  (con swipe, flechas, cambio de persona o el botón volver), aparece un popup
+  **"¿Guardar esta carga?"** donde podés ver, editar o completar los datos antes de
+  pasar, o descartarlos.
 - **Corregir una carga:** tocá cualquier fila del **historial** (tiene el ícono ✎).
   Se abre una ventana para **editar** los datos (kg/reps/seg, RIR, nota) o
   **eliminar** esa carga. Los cambios también se sincronizan con Supabase.

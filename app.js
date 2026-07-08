@@ -289,7 +289,11 @@ function renderUserSwitch() {
     b.type = "button";
     b.className = "uswitch-btn" + (u === currentUser ? " on" : "");
     b.textContent = PLAN.usuarios[u].nombre;
-    b.addEventListener("click", () => { if (u !== currentUser) switchUserSameExercise(u); });
+    b.addEventListener("click", () => {
+      if (u === currentUser) return;
+      if (isDirty(currentIndex)) openSavePrompt(currentIndex, () => switchUserSameExercise(u));
+      else switchUserSameExercise(u);
+    });
     el.appendChild(b);
   });
 }
@@ -503,7 +507,8 @@ function openEditModal(rec, onDone) {
     const val = overlay.querySelector("#m-val").value.trim();
     const rir = overlay.querySelector("#m-rir").value.trim();
     const nota = overlay.querySelector("#m-nota").value.trim();
-    if (val === "" && rir === "") { toast(`Cargá ${MEDIDAS[medida].toLowerCase()} o RIR`); return; }
+    const err = validateForm({ medida, val, rir });
+    if (err) { toast(err); return; }
     await DB.update(rec.id, {
       medida,
       kg: val === "" ? null : Number(val),
@@ -527,52 +532,170 @@ function openEditModal(rec, onDone) {
 }
 
 // ---------------- Guardar una carga ----------------
-async function saveExercise(index) {
+// Lee los campos del formulario de un ejercicio.
+function readForm(index) {
+  return {
+    medida: $(`#toggle-${index}`)?.dataset.medida || "kg",
+    val: ($(`#val-${index}`)?.value || "").trim(),
+    rir: ($(`#rir-${index}`)?.value || "").trim(),
+    nota: ($(`#nota-${index}`)?.value || "").trim(),
+  };
+}
+
+// ¿Hay datos escritos y sin guardar en este ejercicio?
+function isDirty(index) {
+  const f = readForm(index);
+  return f.val !== "" || f.rir !== "" || f.nota !== "";
+}
+
+// Valida: la carga y el RIR son obligatorios (el RIR no aplica a segundos).
+function validateForm(f) {
+  if (f.val === "") return `Falta la ${MEDIDAS[f.medida].toLowerCase()}`;
+  if (f.medida !== "seg" && f.rir === "") return "Falta el RIR (carga y RIR son obligatorios)";
+  return null;
+}
+
+function clearForm(index) {
+  const v = $(`#val-${index}`), r = $(`#rir-${index}`), n = $(`#nota-${index}`);
+  if (v) v.value = "";
+  if (r) r.value = "";
+  if (n) n.value = "";
+}
+
+// Guarda la carga de un ejercicio y refresca la UI de esa tarjeta.
+async function commitLoad(index, f) {
   const ex = exercises[index];
-  const medida = $(`#toggle-${index}`).dataset.medida || "kg";
-  const valEl = $(`#val-${index}`);
-  const rirEl = $(`#rir-${index}`);
-  const notaEl = $(`#nota-${index}`);
-
-  const val = valEl.value.trim();
-  const rir = rirEl.value.trim();
-  const nota = notaEl.value.trim();
-
-  if (val === "" && rir === "") {
-    toast(`Cargá ${MEDIDAS[medida].toLowerCase()} o RIR`);
-    return;
-  }
-
   await DB.save({
     fecha: hoyISO(),
     usuario: currentUser,
     dia: currentDay.id,
     ejercicio: ex.id,
     ejercicio_nombre: ex.nombre,
-    medida: medida,
-    kg: val === "" ? null : Number(val),
-    rir: rir === "" ? null : Number(rir),
-    nota: nota || null,
+    medida: f.medida,
+    kg: f.val === "" ? null : Number(f.val),
+    rir: f.rir === "" ? null : Number(f.rir),
+    nota: f.nota || null,
   });
+  clearForm(index);
+  renderHistoryInto($(`#hist-${index}`), ex.id);
+  markDotDone(index);
+  renderStatusBar();
+}
 
-  // Feedback visual
+async function saveExercise(index) {
+  const f = readForm(index);
+  const err = validateForm(f);
+  if (err) { toast(err); return; }
+
+  await commitLoad(index, f);
+
   const btn = $(`#save-${index}`);
   btn.textContent = "✓ Guardado";
   btn.classList.add("saved");
   setTimeout(() => { btn.textContent = "Guardar"; btn.classList.remove("saved"); }, 1600);
 
-  // Refrescar historial de esta tarjeta y marcar el punto como hecho
-  renderHistoryInto($(`#hist-${index}`), ex.id);
-  markDotDone(index);
-  renderStatusBar();
-
-  // Si es el último ejercicio del día -> resumen
   if (index === exercises.length - 1) {
     setTimeout(() => showSummary(), 700);
   } else {
-    // Pasar al siguiente ejercicio automáticamente
     setTimeout(() => scrollToIndex(index + 1, true), 700);
   }
+}
+
+// Popup al intentar salir de un ejercicio con datos sin guardar.
+function openSavePrompt(index, proceed) {
+  const ex = exercises[index];
+  const f = readForm(index);
+  const med = f.medida;
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>¿Guardar esta carga?</h3>
+      <div class="modal-sub">${ex.nombre} · tenés datos sin guardar</div>
+      <div class="metric-toggle" id="p-toggle" data-medida="${med}">
+        ${Object.keys(MEDIDAS).map(m =>
+          `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
+        ).join("")}
+      </div>
+      <div class="input-row">
+        <div class="field">
+          <label id="p-vlabel">${MEDIDAS[med]}</label>
+          <input type="number" inputmode="decimal" step="0.5" id="p-val" value="${f.val}" />
+        </div>
+        <div class="field">
+          <label>RIR</label>
+          <input type="number" inputmode="numeric" step="1" id="p-rir" value="${f.rir}" />
+        </div>
+      </div>
+      <div class="field full">
+        <label>Nota (opcional)</label>
+        <textarea id="p-nota">${f.nota ? f.nota.replace(/</g, "&lt;") : ""}</textarea>
+      </div>
+      <button class="btn-save" id="p-save">Guardar y continuar</button>
+      <div class="modal-row">
+        <button class="btn-ghost" id="p-back">Volver a completar</button>
+        <button class="btn-danger" id="p-skip">Seguir sin guardar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+
+  overlay.querySelectorAll("#p-toggle button").forEach(b => {
+    b.addEventListener("click", () => {
+      const m = b.dataset.m;
+      overlay.querySelector("#p-toggle").dataset.medida = m;
+      overlay.querySelectorAll("#p-toggle button").forEach(x => x.classList.toggle("on", x === b));
+      overlay.querySelector("#p-vlabel").textContent = MEDIDAS[m];
+    });
+  });
+
+  const readPopup = () => ({
+    medida: overlay.querySelector("#p-toggle").dataset.medida,
+    val: overlay.querySelector("#p-val").value.trim(),
+    rir: overlay.querySelector("#p-rir").value.trim(),
+    nota: overlay.querySelector("#p-nota").value.trim(),
+  });
+
+  // Refleja lo escrito en el popup de vuelta al formulario de la tarjeta.
+  const syncBack = () => {
+    const p = readPopup();
+    const t = $(`#toggle-${index}`);
+    if (t) {
+      t.dataset.medida = p.medida;
+      t.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.dataset.m === p.medida));
+    }
+    const vl = $(`#vlabel-${index}`); if (vl) vl.textContent = MEDIDAS[p.medida];
+    if ($(`#val-${index}`)) $(`#val-${index}`).value = p.val;
+    if ($(`#rir-${index}`)) $(`#rir-${index}`).value = p.rir;
+    if ($(`#nota-${index}`)) $(`#nota-${index}`).value = p.nota;
+  };
+
+  overlay.querySelector("#p-save").addEventListener("click", async () => {
+    const p = readPopup();
+    const err = validateForm(p);
+    if (err) { toast(err); return; }
+    await commitLoad(index, p);
+    close();
+    proceed && proceed();
+  });
+  overlay.querySelector("#p-skip").addEventListener("click", () => {
+    clearForm(index);        // descartar lo escrito
+    close();
+    proceed && proceed();
+  });
+  overlay.querySelector("#p-back").addEventListener("click", () => {
+    syncBack();              // conservar lo editado, quedarse en el ejercicio
+    close();
+  });
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) { syncBack(); close(); } });
+}
+
+// Navega a un ejercicio, pidiendo guardar si el actual tiene datos sin guardar.
+function guardedGoTo(target) {
+  target = Math.max(0, Math.min(exercises.length - 1, target));
+  if (target === currentIndex) return;
+  if (isDirty(currentIndex)) openSavePrompt(currentIndex, () => scrollToIndex(target, true));
+  else scrollToIndex(target, true);
 }
 
 // ---------------- Carrusel: puntos y flechas ----------------
@@ -583,7 +706,7 @@ function renderDots() {
     const d = document.createElement("div");
     d.className = "dot" + (i === currentIndex ? " active" : "");
     d.dataset.index = i;
-    d.addEventListener("click", () => scrollToIndex(i, true));
+    d.addEventListener("click", () => guardedGoTo(i));
     dots.appendChild(d);
   });
   updateArrows();
@@ -609,22 +732,38 @@ function scrollToIndex(i, smooth) {
   updateDots();
 }
 
-// Actualizar el índice al deslizar (swipe)
+// Deslizar (swipe): actualiza el punto activo en vivo y, al soltar, aplica la guardia.
+let navLock = false;
 (function attachScrollSync() {
   const vp = $("#exercise-viewport");
-  let raf = null;
+  let idle = null;
   vp.addEventListener("scroll", () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = null;
-      const i = Math.round(vp.scrollLeft / vp.clientWidth);
-      if (i !== currentIndex) { currentIndex = i; updateDots(); }
-    });
+    const near = Math.round(vp.scrollLeft / vp.clientWidth);
+    $$("#dots .dot").forEach((d, i) => d.classList.toggle("active", i === near)); // solo visual
+    clearTimeout(idle);
+    idle = setTimeout(onSwipeSettled, 140);
   });
 })();
 
-$("#arrow-prev").addEventListener("click", () => scrollToIndex(currentIndex - 1, true));
-$("#arrow-next").addEventListener("click", () => scrollToIndex(currentIndex + 1, true));
+function onSwipeSettled() {
+  const vp = $("#exercise-viewport");
+  const settled = Math.round(vp.scrollLeft / vp.clientWidth);
+  if (navLock || settled === currentIndex) return;
+  const from = currentIndex;
+  if (isDirty(from)) {
+    // Volvemos al ejercicio con datos y preguntamos antes de pasar.
+    navLock = true;
+    scrollToIndex(from, true);
+    setTimeout(() => { navLock = false; }, 400);
+    openSavePrompt(from, () => scrollToIndex(settled, true));
+  } else {
+    currentIndex = settled;
+    updateDots();
+  }
+}
+
+$("#arrow-prev").addEventListener("click", () => guardedGoTo(currentIndex - 1));
+$("#arrow-next").addEventListener("click", () => guardedGoTo(currentIndex + 1));
 
 // ---------------- Resumen de la sesión ----------------
 function showSummary() {
@@ -684,11 +823,19 @@ function exportBackup() {
 }
 
 // ---------------- Botones de navegación generales ----------------
+function doGoto(target) {
+  if (target === "user") { showScreen("user"); }
+  else if (target === "days") { renderDays(); showScreen("days"); }
+}
 $$("[data-goto]").forEach(btn => {
   btn.addEventListener("click", () => {
     const target = btn.dataset.goto;
-    if (target === "user") { showScreen("user"); }
-    else if (target === "days") { renderDays(); showScreen("days"); }
+    // Si salimos de un ejercicio con datos sin guardar, preguntamos primero.
+    if ($("#screen-exercise").classList.contains("active") && isDirty(currentIndex)) {
+      openSavePrompt(currentIndex, () => doGoto(target));
+      return;
+    }
+    doGoto(target);
   });
 });
 $("#btn-export").addEventListener("click", exportBackup);
