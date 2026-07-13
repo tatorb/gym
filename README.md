@@ -219,7 +219,10 @@ El plan vive en **`plan.json`**. Lo podés editar a mano en GitHub:
    ```json
    { "nombre": "Superserie: curl + tríceps", "series": 3, "reps": "10 + 10", "superset": ["Curl bíceps", "Tríceps en polea"], "indicacion": "..." }
    ```
-5. **Video del ejercicio:** agregá un campo `video` con la URL. Si es de
+5. **Reps variables:** si el `reps` del ejercicio es un **rango** (ej. `"10-12"`),
+   la app agrega sola un campo **Reps** para anotar cuántas hiciste (es opcional).
+   En el historial se ve como `100 kg × 12`. No hay que configurar nada extra.
+6. **Video del ejercicio:** agregá un campo `video` con la URL. Si es de
    **YouTube**, se ve embebido dentro de la app (botón "Ver video"). Si es de
    **otro sitio**, aparece un botón que abre el link en otra pestaña.
    ```json

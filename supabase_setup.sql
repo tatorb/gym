@@ -19,6 +19,7 @@ create table if not exists public.registros (
   medida      text        not null default 'kg',  -- 'kg' | 'reps' | 'seg'
   kg          numeric,                            -- valor cargado (peso, reps o segundos según 'medida')
   kg2         numeric,                            -- segundo peso (solo en superseries)
+  reps        numeric,                            -- reps realmente hechas (ejercicios con rango)
   rir         numeric,                            -- reps en reserva
   nota        text                                -- nota opcional
 );
@@ -27,6 +28,7 @@ create table if not exists public.registros (
 -- nuevas sin borrar nada (es seguro correrlas aunque ya existan).
 alter table public.registros add column if not exists medida text not null default 'kg';
 alter table public.registros add column if not exists kg2 numeric;
+alter table public.registros add column if not exists reps numeric;
 
 -- Índice para que el historial por usuario+ejercicio salga rápido.
 create index if not exists registros_busqueda_idx
