@@ -119,6 +119,7 @@
           "nombre": "Superserie: curl bíceps + tríceps en polea",
           "series": 3,
           "reps": "10 + 10",
+          "superset": ["Curl bíceps", "Tríceps en polea"],
           "indicacion": "Hacé curl y sin descanso pasá a tríceps. Descansá recién al terminar los dos."
         },
         {
@@ -185,6 +186,7 @@
           "nombre": "Superserie: curl bíceps + extensión tríceps",
           "series": 2,
           "reps": "12 + 12",
+          "superset": ["Curl bíceps", "Extensión tríceps"],
           "indicacion": "Curl y sin descanso extensión de tríceps. Descansá al terminar los dos."
         },
         {

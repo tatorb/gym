@@ -42,6 +42,7 @@ function resolveExercise(ex, user) {
     notaUsuario: nota,
     medida: base.medida || "kg",   // 'kg' | 'reps' | 'seg' (posición inicial del toggle)
     video: base.video || null,     // URL del video (YouTube = embebido; otro sitio = botón)
+    superset: Array.isArray(base.superset) && base.superset.length === 2 ? base.superset : null,
   };
 }
 function objetivo(ex) {
@@ -193,6 +194,88 @@ function openFullscreen(player, id) {
 // Etiqueta/unidad de cada tipo de medida.
 const MEDIDAS = { kg: "Kg", reps: "Reps", seg: "Seg" };
 const UNIDAD = { kg: "kg", reps: "reps", seg: "seg" };
+
+// ---------- Formulario de carga (compartido por tarjeta, popup y edición) ----------
+const setVal = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+
+// Genera el HTML de los campos (toggle + peso(s) + RIR + nota).
+// En superseries muestra dos pesos (uno por movimiento) y un solo RIR.
+function fieldsHTML(ids, ex, init) {
+  const med = init.medida || ex.medida || "kg";
+  const ss = ex.superset;
+  const num = v => (v === null || v === undefined) ? "" : v;
+  let h = "";
+  if (!ss) {
+    h += `<div class="metric-toggle" id="${ids.toggle}" data-medida="${med}">
+      ${Object.keys(MEDIDAS).map(m =>
+        `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`).join("")}
+    </div>`;
+  }
+  if (ss) {
+    h += `<div class="input-row">
+      <div class="field"><label>${ss[0]}</label>
+        <input type="number" inputmode="decimal" step="0.5" id="${ids.val}" value="${num(init.val)}" placeholder="kg" /></div>
+      <div class="field"><label>${ss[1]}</label>
+        <input type="number" inputmode="decimal" step="0.5" id="${ids.val2}" value="${num(init.val2)}" placeholder="kg" /></div>
+    </div>
+    <div class="input-row">
+      <div class="field"><label>RIR</label>
+        <input type="number" inputmode="numeric" step="1" id="${ids.rir}" value="${num(init.rir)}" placeholder="1" /></div>
+      <div class="field" aria-hidden="true" style="visibility:hidden"></div>
+    </div>`;
+  } else {
+    h += `<div class="input-row">
+      <div class="field"><label id="${ids.vlabel}">${MEDIDAS[med]}</label>
+        <input type="number" inputmode="decimal" step="0.5" id="${ids.val}" value="${num(init.val)}" placeholder="—" /></div>
+      <div class="field"><label>RIR</label>
+        <input type="number" inputmode="numeric" step="1" id="${ids.rir}" value="${num(init.rir)}" placeholder="—" /></div>
+    </div>`;
+  }
+  h += `<div class="field full"><label>Nota (opcional)</label>
+    <textarea id="${ids.nota}" placeholder="Ej: subí 2.5 kg, buena técnica">${init.nota ? String(init.nota).replace(/</g, "&lt;") : ""}</textarea></div>`;
+  return h;
+}
+
+// Conecta el toggle Kg/Reps/Seg (si existe) dentro de un contenedor.
+function attachToggle(root, ids) {
+  const toggleEl = root.querySelector(`#${ids.toggle}`);
+  if (!toggleEl) return;
+  toggleEl.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      const m = b.dataset.m;
+      toggleEl.dataset.medida = m;
+      toggleEl.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      const vl = root.querySelector(`#${ids.vlabel}`);
+      if (vl) vl.textContent = MEDIDAS[m];
+    });
+  });
+}
+
+// Lee los valores de un conjunto de campos.
+function readFields(ids, ex) {
+  const ss = !!ex.superset;
+  const toggleEl = document.getElementById(ids.toggle);
+  const medida = ss ? (ex.medida || "kg") : (toggleEl?.dataset.medida || "kg");
+  const g = id => (document.getElementById(id)?.value || "").trim();
+  return { superset: ss, medida, val: g(ids.val), val2: ss ? g(ids.val2) : "", rir: g(ids.rir), nota: g(ids.nota) };
+}
+
+// Convierte lo leído a las columnas de la base.
+function toDbFields(f) {
+  return {
+    medida: f.medida,
+    kg: f.val === "" ? null : Number(f.val),
+    kg2: f.superset ? (f.val2 === "" ? null : Number(f.val2)) : null,
+    rir: f.rir !== "" ? Number(f.rir) : (f.superset ? 1 : null), // en superserie el RIR es 1 por defecto
+    nota: f.nota || null,
+  };
+}
+
+// Ids de los campos de la tarjeta de un ejercicio.
+const cardIds = (i) => ({
+  toggle: `toggle-${i}`, vlabel: `vlabel-${i}`,
+  val: `val-${i}`, val2: `val2-${i}`, rir: `rir-${i}`, nota: `nota-${i}`,
+});
 
 // ---------------- Navegación entre pantallas ----------------
 function showScreen(name) {
@@ -382,41 +465,12 @@ function buildExerciseCard(ex, index) {
 
   const form = document.createElement("div");
   form.className = "load-form";
-  const med = ex.medida;
-  form.innerHTML = `
-    <div class="metric-toggle" id="toggle-${index}" data-medida="${med}">
-      ${Object.keys(MEDIDAS).map(m =>
-        `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
-      ).join("")}
-    </div>
-    <div class="input-row">
-      <div class="field">
-        <label id="vlabel-${index}">${MEDIDAS[med]}</label>
-        <input type="number" inputmode="decimal" step="0.5" id="val-${index}" placeholder="—" />
-      </div>
-      <div class="field">
-        <label>RIR</label>
-        <input type="number" inputmode="numeric" step="1" id="rir-${index}" placeholder="—" />
-      </div>
-    </div>
-    <div class="field full">
-      <label>Nota (opcional)</label>
-      <textarea id="nota-${index}" placeholder="Ej: subí 2.5 kg, buena técnica"></textarea>
-    </div>
-    <button class="btn-save" id="save-${index}">Guardar</button>`;
+  const ids = cardIds(index);
+  form.innerHTML = fieldsHTML(ids, ex, {}) +
+    `<button class="btn-save" id="save-${index}">Guardar</button>`;
   frag.appendChild(form);
 
-  // Toggle Kg / Reps / Seg
-  form.querySelectorAll(`#toggle-${index} button`).forEach(b => {
-    b.addEventListener("click", () => {
-      const m = b.dataset.m;
-      const toggle = $(`#toggle-${index}`);
-      toggle.dataset.medida = m;
-      toggle.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-      $(`#vlabel-${index}`).textContent = MEDIDAS[m];
-    });
-  });
-
+  attachToggle(form, ids);
   form.querySelector(`#save-${index}`).addEventListener("click", () => saveExercise(index));
   return frag;
 }
@@ -429,7 +483,9 @@ function renderHistoryInto(el, exerciseId) {
   }
   el.innerHTML = rows.map(r => {
     const u = UNIDAD[r.medida] || "kg";
-    const kg = (r.kg ?? "") !== "" ? `${r.kg} ${u}` : "—";
+    const kg = (r.kg2 ?? "") !== ""
+      ? `${r.kg ?? "—"} + ${r.kg2} ${u}`
+      : ((r.kg ?? "") !== "" ? `${r.kg} ${u}` : "—");
     const rir = (r.rir ?? "") !== "" ? `RIR ${r.rir}` : "";
     const nota = r.nota ? `<span class="hist-note">“${r.nota}”</span>` : "";
     const badge = r._pending ? `<span class="hist-badge">⏳</span>` : "";
@@ -454,32 +510,16 @@ function renderHistoryInto(el, exerciseId) {
 
 // ---------------- Editar / eliminar una carga ----------------
 function openEditModal(rec, onDone) {
+  const ex = exercises.find(e => e.id === rec.ejercicio) || { superset: null, medida: rec.medida || "kg" };
+  const mIds = { toggle: "m-toggle", vlabel: "m-vlabel", val: "m-val", val2: "m-val2", rir: "m-rir", nota: "m-nota" };
+  const init = { medida: rec.medida, val: rec.kg, val2: rec.kg2, rir: rec.rir, nota: rec.nota };
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
-  const med = rec.medida || "kg";
   overlay.innerHTML = `
     <div class="modal">
       <h3>Editar carga</h3>
       <div class="modal-sub">${rec.ejercicio_nombre || ""} · ${fechaCorta(rec.fecha)}</div>
-      <div class="metric-toggle" id="m-toggle" data-medida="${med}">
-        ${Object.keys(MEDIDAS).map(m =>
-          `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
-        ).join("")}
-      </div>
-      <div class="input-row">
-        <div class="field">
-          <label id="m-vlabel">${MEDIDAS[med]}</label>
-          <input type="number" inputmode="decimal" step="0.5" id="m-val" value="${rec.kg ?? ""}" />
-        </div>
-        <div class="field">
-          <label>RIR</label>
-          <input type="number" inputmode="numeric" step="1" id="m-rir" value="${rec.rir ?? ""}" />
-        </div>
-      </div>
-      <div class="field full">
-        <label>Nota (opcional)</label>
-        <textarea id="m-nota">${rec.nota ? String(rec.nota).replace(/</g, "&lt;") : ""}</textarea>
-      </div>
+      ${fieldsHTML(mIds, ex, init)}
       <button class="btn-save" id="m-save">Guardar cambios</button>
       <div class="modal-row">
         <button class="btn-ghost" id="m-cancel">Cancelar</button>
@@ -490,31 +530,15 @@ function openEditModal(rec, onDone) {
 
   const close = () => overlay.remove();
   overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
-
-  overlay.querySelectorAll("#m-toggle button").forEach(b => {
-    b.addEventListener("click", () => {
-      const m = b.dataset.m;
-      overlay.querySelector("#m-toggle").dataset.medida = m;
-      overlay.querySelectorAll("#m-toggle button").forEach(x => x.classList.toggle("on", x === b));
-      overlay.querySelector("#m-vlabel").textContent = MEDIDAS[m];
-    });
-  });
+  attachToggle(overlay, mIds);
 
   overlay.querySelector("#m-cancel").addEventListener("click", close);
 
   overlay.querySelector("#m-save").addEventListener("click", async () => {
-    const medida = overlay.querySelector("#m-toggle").dataset.medida;
-    const val = overlay.querySelector("#m-val").value.trim();
-    const rir = overlay.querySelector("#m-rir").value.trim();
-    const nota = overlay.querySelector("#m-nota").value.trim();
-    const err = validateForm({ medida, val, rir });
+    const f = readFields(mIds, ex);
+    const err = validateForm(f);
     if (err) { toast(err); return; }
-    await DB.update(rec.id, {
-      medida,
-      kg: val === "" ? null : Number(val),
-      rir: rir === "" ? null : Number(rir),
-      nota: nota || null,
-    });
+    await DB.update(rec.id, toDbFields(f));
     close();
     renderStatusBar();
     onDone && onDone();
@@ -534,32 +558,30 @@ function openEditModal(rec, onDone) {
 // ---------------- Guardar una carga ----------------
 // Lee los campos del formulario de un ejercicio.
 function readForm(index) {
-  return {
-    medida: $(`#toggle-${index}`)?.dataset.medida || "kg",
-    val: ($(`#val-${index}`)?.value || "").trim(),
-    rir: ($(`#rir-${index}`)?.value || "").trim(),
-    nota: ($(`#nota-${index}`)?.value || "").trim(),
-  };
+  return readFields(cardIds(index), exercises[index]);
 }
 
 // ¿Hay datos escritos y sin guardar en este ejercicio?
 function isDirty(index) {
   const f = readForm(index);
-  return f.val !== "" || f.rir !== "" || f.nota !== "";
+  return f.val !== "" || f.val2 !== "" || f.rir !== "" || f.nota !== "";
 }
 
-// Valida: la carga y el RIR son obligatorios (el RIR no aplica a segundos).
+// Valida los campos. Carga y RIR obligatorios; en superserie, los dos pesos
+// (el RIR es opcional y por defecto vale 1). El RIR no aplica a segundos.
 function validateForm(f) {
+  if (f.superset) {
+    if (f.val === "" || f.val2 === "") return "Completá el peso de los dos movimientos";
+    return null;
+  }
   if (f.val === "") return `Falta la ${MEDIDAS[f.medida].toLowerCase()}`;
   if (f.medida !== "seg" && f.rir === "") return "Falta el RIR (carga y RIR son obligatorios)";
   return null;
 }
 
 function clearForm(index) {
-  const v = $(`#val-${index}`), r = $(`#rir-${index}`), n = $(`#nota-${index}`);
-  if (v) v.value = "";
-  if (r) r.value = "";
-  if (n) n.value = "";
+  const ids = cardIds(index);
+  [ids.val, ids.val2, ids.rir, ids.nota].forEach(id => setVal(id, ""));
 }
 
 // Guarda la carga de un ejercicio y refresca la UI de esa tarjeta.
@@ -571,10 +593,7 @@ async function commitLoad(index, f) {
     dia: currentDay.id,
     ejercicio: ex.id,
     ejercicio_nombre: ex.nombre,
-    medida: f.medida,
-    kg: f.val === "" ? null : Number(f.val),
-    rir: f.rir === "" ? null : Number(f.rir),
-    nota: f.nota || null,
+    ...toDbFields(f),
   });
   clearForm(index);
   renderHistoryInto($(`#hist-${index}`), ex.id);
@@ -604,33 +623,15 @@ async function saveExercise(index) {
 // Popup al intentar salir de un ejercicio con datos sin guardar.
 function openSavePrompt(index, proceed) {
   const ex = exercises[index];
-  const f = readForm(index);
-  const med = f.medida;
+  const init = readForm(index);
+  const pIds = { toggle: "p-toggle", vlabel: "p-vlabel", val: "p-val", val2: "p-val2", rir: "p-rir", nota: "p-nota" };
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.innerHTML = `
     <div class="modal">
       <h3>¿Guardar esta carga?</h3>
       <div class="modal-sub">${ex.nombre} · tenés datos sin guardar</div>
-      <div class="metric-toggle" id="p-toggle" data-medida="${med}">
-        ${Object.keys(MEDIDAS).map(m =>
-          `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`
-        ).join("")}
-      </div>
-      <div class="input-row">
-        <div class="field">
-          <label id="p-vlabel">${MEDIDAS[med]}</label>
-          <input type="number" inputmode="decimal" step="0.5" id="p-val" value="${f.val}" />
-        </div>
-        <div class="field">
-          <label>RIR</label>
-          <input type="number" inputmode="numeric" step="1" id="p-rir" value="${f.rir}" />
-        </div>
-      </div>
-      <div class="field full">
-        <label>Nota (opcional)</label>
-        <textarea id="p-nota">${f.nota ? f.nota.replace(/</g, "&lt;") : ""}</textarea>
-      </div>
+      ${fieldsHTML(pIds, ex, init)}
       <button class="btn-save" id="p-save">Guardar y continuar</button>
       <div class="modal-row">
         <button class="btn-ghost" id="p-back">Volver a completar</button>
@@ -639,35 +640,26 @@ function openSavePrompt(index, proceed) {
     </div>`;
   document.body.appendChild(overlay);
   const close = () => overlay.remove();
+  attachToggle(overlay, pIds);
 
-  overlay.querySelectorAll("#p-toggle button").forEach(b => {
-    b.addEventListener("click", () => {
-      const m = b.dataset.m;
-      overlay.querySelector("#p-toggle").dataset.medida = m;
-      overlay.querySelectorAll("#p-toggle button").forEach(x => x.classList.toggle("on", x === b));
-      overlay.querySelector("#p-vlabel").textContent = MEDIDAS[m];
-    });
-  });
-
-  const readPopup = () => ({
-    medida: overlay.querySelector("#p-toggle").dataset.medida,
-    val: overlay.querySelector("#p-val").value.trim(),
-    rir: overlay.querySelector("#p-rir").value.trim(),
-    nota: overlay.querySelector("#p-nota").value.trim(),
-  });
+  const readPopup = () => readFields(pIds, ex);
 
   // Refleja lo escrito en el popup de vuelta al formulario de la tarjeta.
   const syncBack = () => {
     const p = readPopup();
-    const t = $(`#toggle-${index}`);
-    if (t) {
-      t.dataset.medida = p.medida;
-      t.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.dataset.m === p.medida));
+    const cIds = cardIds(index);
+    if (!ex.superset) {
+      const t = document.getElementById(cIds.toggle);
+      if (t) {
+        t.dataset.medida = p.medida;
+        t.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.dataset.m === p.medida));
+      }
+      const vl = document.getElementById(cIds.vlabel); if (vl) vl.textContent = MEDIDAS[p.medida];
     }
-    const vl = $(`#vlabel-${index}`); if (vl) vl.textContent = MEDIDAS[p.medida];
-    if ($(`#val-${index}`)) $(`#val-${index}`).value = p.val;
-    if ($(`#rir-${index}`)) $(`#rir-${index}`).value = p.rir;
-    if ($(`#nota-${index}`)) $(`#nota-${index}`).value = p.nota;
+    setVal(cIds.val, p.val);
+    if (ex.superset) setVal(cIds.val2, p.val2);
+    setVal(cIds.rir, p.rir);
+    setVal(cIds.nota, p.nota);
   };
 
   overlay.querySelector("#p-save").addEventListener("click", async () => {
@@ -789,7 +781,9 @@ function showSummary() {
     const r = porEjercicio[ex.id];
     if (r) {
       const u = UNIDAD[r.medida] || "kg";
-      const kg = (r.kg ?? "") !== "" ? `${r.kg} ${u}` : "";
+      const kg = (r.kg2 ?? "") !== ""
+        ? `${r.kg ?? "—"} + ${r.kg2} ${u}`
+        : ((r.kg ?? "") !== "" ? `${r.kg} ${u}` : "");
       const rir = (r.rir ?? "") !== "" ? ` · RIR ${r.rir}` : "";
       html += `<div class="sum-row">
         <span class="sum-name">${ex.nombre}</span>

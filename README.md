@@ -213,7 +213,13 @@ El plan vive en **`plan.json`**. Lo podés editar a mano en GitHub:
      "tato": { "nombre": "Curl femoral", "series": 3, "reps": "10", "indicacion": "..." }
    }
    ```
-4. **Video del ejercicio:** agregá un campo `video` con la URL. Si es de
+4. **Superserie (dos movimientos):** agregá `"superset": ["Nombre 1", "Nombre 2"]`.
+   El ejercicio va a pedir **un peso para cada movimiento** y **un solo RIR** (que
+   por defecto vale 1). En el historial se ve como `20 + 30 kg`.
+   ```json
+   { "nombre": "Superserie: curl + tríceps", "series": 3, "reps": "10 + 10", "superset": ["Curl bíceps", "Tríceps en polea"], "indicacion": "..." }
+   ```
+5. **Video del ejercicio:** agregá un campo `video` con la URL. Si es de
    **YouTube**, se ve embebido dentro de la app (botón "Ver video"). Si es de
    **otro sitio**, aparece un botón que abre el link en otra pestaña.
    ```json
