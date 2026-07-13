@@ -807,7 +807,8 @@ function showSummary() {
 
   const cont = $("#summary-content");
   const nombreUser = PLAN.usuarios[currentUser]?.nombre || currentUser;
-  let html = `<h2>${currentDay.nombre} · ${currentDay.subtitulo || ""}</h2>
+  let html = `<div class="sum-celebrate">🎉 ¡Sesión terminada!</div>
+    <h2>${currentDay.nombre} · ${currentDay.subtitulo || ""}</h2>
     <div class="sum-date">${nombreUser} · ${fechaCorta(fecha)}</div>`;
 
   exercises.forEach(ex => {
@@ -832,6 +833,63 @@ function showSummary() {
   });
   cont.innerHTML = html;
   showScreen("summary");
+  launchConfetti();
+}
+
+// ---------------- Confeti de festejo ----------------
+function launchConfetti() {
+  // Respetar a quien prefiere menos animaciones.
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "confetti-canvas";
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = () => window.innerWidth, H = () => window.innerHeight;
+  canvas.width = W() * dpr; canvas.height = H() * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const colors = ["#3B82F6", "#EC4899", "#f59e0b", "#22c55e", "#a855f7", "#f5f5f5"];
+  const N = 160;
+  const parts = [];
+  for (let i = 0; i < N; i++) {
+    parts.push({
+      x: Math.random() * W(),
+      y: -20 - Math.random() * H() * 0.4,
+      vx: (Math.random() - 0.5) * 2.4,
+      vy: 2 + Math.random() * 4.5,
+      size: 6 + Math.random() * 7,
+      color: colors[(Math.random() * colors.length) | 0],
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.35,
+      shape: Math.random() < 0.5 ? "rect" : "circle",
+    });
+  }
+
+  const start = performance.now();
+  const DURATION = 3500, FADE = 900;
+  function frame(now) {
+    const t = now - start;
+    ctx.clearRect(0, 0, W(), H());
+    const alpha = t > DURATION - FADE ? Math.max(0, (DURATION - t) / FADE) : 1;
+    for (const p of parts) {
+      p.vy += 0.06;            // gravedad
+      p.vx *= 0.995;
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      if (p.shape === "rect") ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      else { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    }
+    if (t < DURATION) requestAnimationFrame(frame);
+    else canvas.remove();
+  }
+  requestAnimationFrame(frame);
 }
 
 // ---------------- Exportar respaldo ----------------
