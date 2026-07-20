@@ -52,6 +52,7 @@ body[data-user="gabi"] { --accent: #EC4899; --accent-soft: rgba(236,72,153,0.16)
 }
 .status-bar.offline { background: #3a2a12; color: #ffcf8a; }
 .status-bar.syncing { background: #10233a; color: #9ccaff; }
+.status-bar.error { background: #3a1212; color: #ff9a9a; }
 
 /* ===================== PANTALLA USUARIO ===================== */
 .user-picker {

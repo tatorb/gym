@@ -324,14 +324,29 @@ function toast(msg) {
   toastTimer = setTimeout(() => t.classList.add("hidden"), 2200);
 }
 
+let syncError = null;
+
 function renderStatusBar() {
   const bar = $("#statusBar");
   const p = DB.pendingCount();
+  bar.onclick = null;
   if (!navigator.onLine) {
     bar.className = "status-bar offline";
     bar.textContent = p > 0
       ? `Sin conexión · ${p} carga${p > 1 ? "s" : ""} se subir${p > 1 ? "án" : "á"} a Supabase al volver la señal`
       : "Sin conexión · lo que cargues se subirá a Supabase al volver la señal";
+    bar.classList.remove("hidden");
+  } else if (syncError) {
+    bar.className = "status-bar error";
+    bar.textContent = `⚠️ No se pudo subir a Supabase (${p} pendiente${p > 1 ? "s" : ""}). Tocá para ver el motivo.`;
+    bar.onclick = () => alert(
+      "Error al sincronizar con Supabase:\n\n" + syncError +
+      "\n\nSi el mensaje menciona una columna que no existe " +
+      "(por ejemplo \"kg2\" o \"reps\"), abrí Supabase → SQL Editor y corré:\n\n" +
+      "alter table public.registros add column if not exists medida text not null default 'kg';\n" +
+      "alter table public.registros add column if not exists kg2 numeric;\n" +
+      "alter table public.registros add column if not exists reps numeric;"
+    );
     bar.classList.remove("hidden");
   } else if (p > 0) {
     bar.className = "status-bar syncing";
@@ -346,7 +361,11 @@ function renderStatusBar() {
   }
 }
 
-DB.onStatus(() => renderStatusBar());
+DB.onStatus((state, detail) => {
+  if (state === "error") syncError = (detail && detail.message) || "Error desconocido";
+  else if (state === "idle") syncError = null;
+  renderStatusBar();
+});
 window.addEventListener("online", renderStatusBar);
 window.addEventListener("offline", renderStatusBar);
 
