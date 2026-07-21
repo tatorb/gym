@@ -59,7 +59,20 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
 
 /* ===================== PANTALLAS ===================== */
 .screen { display: none; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.screen.active { display: flex; }
+.screen.active { display: flex; animation: screen-in .3s ease; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* En la pantalla de días el nombre va en el saludo, no en la barra */
+#screen-days .topbar-title { visibility: hidden; }
+
+/* Accesibilidad: respetar "reducir movimiento" */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
 
 /* ===================== BARRA DE ESTADO SUPERIOR ===================== */
 .status-bar {
@@ -114,22 +127,45 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
 }
 .icon-btn:active { background: var(--bg-elev-2); }
 
+/* ===================== SALUDO ===================== */
+.greeting { display: flex; align-items: center; gap: 14px; padding: 4px 18px 14px; }
+.greeting-avatar {
+  width: 52px; height: 52px; flex: 0 0 52px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px var(--accent-glow);
+}
+.greeting-hi { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.greeting-sub { color: var(--text-dim); font-size: 14px; margin-top: 2px; }
+
 /* ===================== MENÚ DE DÍAS ===================== */
-.days-list { padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.days-list { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
 .day-card {
   position: relative; text-align: left;
   border: 1px solid var(--border);
   background:
     radial-gradient(140% 120% at 0% 0%, var(--accent-soft), transparent 55%),
     var(--bg-elev);
-  color: var(--text); border-radius: var(--radius); padding: 22px 20px;
-  display: flex; flex-direction: column; gap: 5px;
+  color: var(--text); border-radius: var(--radius); padding: 18px 18px;
+  display: flex; align-items: center; gap: 15px;
   transition: transform .1s ease;
+  animation: card-up .45s ease backwards;
 }
+@keyframes card-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 .day-card:active { transform: scale(0.985); background: var(--bg-elev-2); }
-.day-card .day-name { font-size: 21px; font-weight: 800; }
+.day-badge {
+  width: 48px; height: 48px; flex: 0 0 48px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft); color: var(--accent);
+}
+.day-badge svg { width: 25px; height: 25px; }
+.day-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.day-card .day-name { font-size: 20px; font-weight: 800; }
 .day-card .day-sub { color: var(--text-dim); font-size: 15px; }
-.day-card .day-count { color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 6px; }
+.day-card .day-count { color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 4px; }
+.day-chevron { color: var(--text-faint); display: flex; flex: 0 0 auto; }
+.day-chevron svg { width: 22px; height: 22px; }
 
 /* ===================== TARJETAS DE EJERCICIO (carrusel) ===================== */
 .exercise-viewport {
@@ -148,15 +184,38 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
   padding: 14px 18px calc(24px + var(--safe-bottom));
 }
 
-.ex-header { margin-bottom: 16px; }
+.ex-header { margin-bottom: 8px; }
 .ex-name { font-size: 28px; font-weight: 800; margin: 0 0 10px; letter-spacing: -0.6px; }
-.ex-target {
-  display: inline-block; font-weight: 700; font-size: 15px;
-  color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  padding: 6px 14px; border-radius: 999px;
-  box-shadow: 0 6px 18px var(--accent-glow);
+
+/* Tarjeta hero con gradiente (ejercicio actual) */
+.ex-hero {
+  position: relative; overflow: hidden;
+  border-radius: 22px; padding: 22px 20px 18px;
+  background: linear-gradient(150deg, var(--accent), var(--accent-2));
+  box-shadow: 0 16px 42px var(--accent-glow);
+  margin-bottom: 14px;
+  animation: hero-in .4s ease;
 }
-.ex-cue { color: var(--text-dim); font-size: 15px; margin-top: 14px; line-height: 1.55; }
+@keyframes hero-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+.ex-hero-glow {
+  position: absolute; top: -50%; right: -18%; width: 72%; height: 170%;
+  background: radial-gradient(circle, rgba(255,255,255,0.38), transparent 60%);
+  pointer-events: none;
+}
+.ex-hero .ex-name { color: #fff; margin: 0 0 16px; font-size: 26px; position: relative; }
+.hero-tiles { display: flex; gap: 10px; position: relative; }
+.hero-tile {
+  flex: 1; min-width: 0; color: #fff;
+  background: rgba(0,0,0,0.20); border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 16px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.hero-tile .tile-ico { opacity: 0.85; height: 18px; }
+.hero-tile .tile-ico svg { width: 18px; height: 18px; }
+.hero-tile b { font-size: 21px; font-weight: 800; line-height: 1.15; }
+.hero-tile small { font-size: 12px; opacity: 0.82; font-weight: 600; }
+
+.ex-cue { color: var(--text-dim); font-size: 15px; margin-top: 4px; line-height: 1.55; }
 .ex-note {
   margin-top: 12px; font-size: 14px; color: #ffcf8a;
   background: rgba(255,207,138,0.1); border-radius: 12px; padding: 10px 14px;

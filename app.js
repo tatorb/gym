@@ -369,6 +369,15 @@ DB.onStatus((state, detail) => {
 window.addEventListener("online", renderStatusBar);
 window.addEventListener("offline", renderStatusBar);
 
+// Íconos SVG (línea, heredan el color con currentColor)
+const ICONS = {
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+  dumbbell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></svg>',
+};
+
 // ---------------- Elegir usuario ----------------
 function selectUser(user) {
   currentUser = user;
@@ -382,16 +391,24 @@ function selectUser(user) {
 
 // ---------------- Menú de días ----------------
 function renderDays() {
+  const nombre = PLAN.usuarios[currentUser]?.nombre || currentUser || "";
+  $("#greeting-name").textContent = nombre;
+  $("#greeting-avatar").textContent = (nombre.charAt(0) || "?").toUpperCase();
   const cont = $("#days-list");
   cont.innerHTML = "";
-  PLAN.dias.forEach(dia => {
+  PLAN.dias.forEach((dia, i) => {
     const n = dia.ejercicios.length;
     const card = document.createElement("button");
     card.className = "day-card";
+    card.style.animationDelay = `${i * 70}ms`;
     card.innerHTML = `
-      <span class="day-name">${dia.nombre}</span>
-      <span class="day-sub">${dia.subtitulo || ""}</span>
-      <span class="day-count">${n} ejercicios</span>`;
+      <div class="day-badge">${ICONS.dumbbell}</div>
+      <div class="day-body">
+        <span class="day-name">${dia.nombre}</span>
+        <span class="day-sub">${dia.subtitulo || ""}</span>
+        <span class="day-count">${n} ejercicios</span>
+      </div>
+      <div class="day-chevron">${ICONS.chevron}</div>`;
     card.addEventListener("click", () => openDay(dia));
     cont.appendChild(card);
   });
@@ -481,12 +498,25 @@ function renderExercises() {
 function buildExerciseCard(ex, index) {
   const frag = document.createElement("div");
 
-  // Encabezado
+  // Encabezado: tarjeta hero con gradiente + tiles de series/reps
   const header = document.createElement("div");
   header.className = "ex-header";
+  const esSeg = ex.medida === "seg";
   header.innerHTML = `
-    <h2 class="ex-name">${ex.nombre}</h2>
-    <span class="ex-target">${objetivo(ex)}</span>
+    <div class="ex-hero">
+      <div class="ex-hero-glow"></div>
+      <h2 class="ex-name">${ex.nombre}</h2>
+      <div class="hero-tiles">
+        <div class="hero-tile">
+          <span class="tile-ico">${ICONS.layers}</span>
+          <b>${ex.series}</b><small>Series</small>
+        </div>
+        <div class="hero-tile">
+          <span class="tile-ico">${esSeg ? ICONS.clock : ICONS.target}</span>
+          <b>${ex.reps}</b><small>${esSeg ? "Tiempo" : "Reps"}</small>
+        </div>
+      </div>
+    </div>
     <p class="ex-cue">${ex.indicacion || ""}</p>
     ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
   frag.appendChild(header);
