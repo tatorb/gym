@@ -880,9 +880,334 @@ function showSummary() {
       </div>`;
     }
   });
+  // Progreso de la sesión (volumen de hoy vs. la vez pasada + récords)
+  html += renderSummaryProgress(fecha, porEjercicio);
+
   cont.innerHTML = html;
+  const mb = $("#sum-metrics");
+  if (mb) mb.addEventListener("click", openMetrics);
   showScreen("summary");
   launchConfetti();
+}
+
+function renderSummaryProgress(fecha, porEjercicio) {
+  const todayVol = Object.values(porEjercicio).reduce((s, r) => s + recordVolume(r), 0);
+  if (todayVol <= 0) return "";
+  let h = `<div class="section-label">Progreso</div>`;
+  const prev = previousSession(currentUser, currentDay.id, fecha);
+  if (prev && prev.vol > 0) {
+    const diff = (todayVol - prev.vol) / prev.vol * 100;
+    const up = todayVol >= prev.vol;
+    h += `<div class="prog-card">
+      <div class="prog-main"><b>${fmtVol(todayVol)}</b><small>Volumen de hoy</small></div>
+      <div class="prog-delta ${up ? "up" : "down"}">
+        <span>${up ? "▲" : "▼"} ${Math.abs(diff).toFixed(0)}%</span>
+        <small>vs ${fechaCorta(prev.fecha)}</small>
+      </div>
+    </div>`;
+  } else {
+    h += `<div class="prog-card"><div class="prog-main"><b>${fmtVol(todayVol)}</b><small>Volumen de hoy · primera sesión de este día 💪</small></div></div>`;
+  }
+  const prs = countPRs(currentUser, currentDay.id, fecha, porEjercicio);
+  if (prs > 0) h += `<div class="pr-chip">🏆 ${prs} récord${prs > 1 ? "s" : ""} de peso hoy</div>`;
+  h += `<button class="btn-ghost" id="sum-metrics" style="margin-top:14px">📊 Ver métricas</button>`;
+  return h;
+}
+
+// ==================== MÉTRICAS ====================
+// ---- Cálculos ----
+function fmtVol(v) { return Math.round(v).toLocaleString("es-AR"); }
+
+function planLookup(exId, user) {
+  for (const d of PLAN.dias) {
+    const ex = d.ejercicios.find(e => e.id === exId);
+    if (ex) return resolveExercise(ex, user);
+  }
+  return null;
+}
+function repsMid(str) {
+  const s = String(str || "");
+  const m = s.match(/(\d+)\s*-\s*(\d+)/);
+  if (m) return (Number(m[1]) + Number(m[2])) / 2;
+  const n = s.match(/\d+/);
+  return n ? Number(n[0]) : 0;
+}
+// Volumen de una carga = peso × reps × series (adaptado a cada tipo).
+function recordVolume(r) {
+  const p = planLookup(r.ejercicio, r.usuario);
+  const series = (p && p.series) || 1;
+  const medida = r.medida || "kg";
+  if (r.kg2 != null && r.kg2 !== "") {
+    return (Number(r.kg || 0) + Number(r.kg2 || 0)) * repsMid(p && p.reps) * series;
+  }
+  if (medida === "kg") {
+    const reps = (r.reps != null && r.reps !== "") ? Number(r.reps) : repsMid(p && p.reps);
+    return Number(r.kg || 0) * reps * series;
+  }
+  return Number(r.kg || 0) * series; // reps o seg: el valor está en kg
+}
+// Valor principal para el gráfico por ejercicio.
+function exercisePrimary(r) {
+  const medida = r.medida || "kg";
+  if (r.kg2 != null && r.kg2 !== "") return { value: recordVolume(r), unidad: "vol", label: "Volumen" };
+  if (medida === "kg") return { value: Number(r.kg || 0), unidad: "kg", label: "Peso" };
+  if (medida === "reps") return { value: Number(r.kg || 0), unidad: "reps", label: "Reps" };
+  return { value: Number(r.kg || 0), unidad: "seg", label: "Tiempo" };
+}
+// Deja una carga por (fecha, ejercicio): la más reciente.
+function dedupRecords(list) {
+  const m = {};
+  list.forEach(r => {
+    const k = r.fecha + "|" + r.ejercicio;
+    if (!m[k] || (r.created_at || "") > (m[k].created_at || "")) m[k] = r;
+  });
+  return Object.values(m);
+}
+function exerciseSeries(user, exId) {
+  return dedupRecords(DB.all().filter(r => r.usuario === user && r.ejercicio === exId))
+    .sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+}
+function daySeries(user, diaId) {
+  const recs = dedupRecords(DB.all().filter(r => r.usuario === user && r.dia === diaId));
+  const byDate = {};
+  recs.forEach(r => { (byDate[r.fecha] = byDate[r.fecha] || []).push(r); });
+  return Object.keys(byDate).sort().map(fecha => ({
+    label: fecha,
+    value: byDate[fecha].reduce((s, r) => s + recordVolume(r), 0),
+    n: byDate[fecha].length,
+  }));
+}
+function previousSession(user, dia, beforeFecha) {
+  const recs = dedupRecords(DB.all().filter(r => r.usuario === user && r.dia === dia && r.fecha < beforeFecha));
+  const byDate = {};
+  recs.forEach(r => { (byDate[r.fecha] = byDate[r.fecha] || []).push(r); });
+  const dates = Object.keys(byDate).sort();
+  if (!dates.length) return null;
+  const f = dates[dates.length - 1];
+  return { fecha: f, vol: byDate[f].reduce((s, r) => s + recordVolume(r), 0) };
+}
+function countPRs(user, dia, fecha, todayMap) {
+  let n = 0;
+  Object.values(todayMap).forEach(r => {
+    if ((r.medida || "kg") !== "kg" || r.kg == null) return;
+    const prev = DB.all().filter(x => x.usuario === user && x.ejercicio === r.ejercicio &&
+      x.fecha < fecha && (x.medida || "kg") === "kg" && x.kg != null).map(x => Number(x.kg));
+    const prevMax = prev.length ? Math.max(...prev) : 0;
+    if (prevMax > 0 && Number(r.kg) > prevMax) n++;
+  });
+  return n;
+}
+function weekKey(fecha) {
+  const [y, m, d] = fecha.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const day = (dt.getUTCDay() + 6) % 7; // lunes = 0
+  dt.setUTCDate(dt.getUTCDate() - day);
+  return dt.toISOString().slice(0, 10);
+}
+function weekShort(k) { const [, m, d] = k.split("-"); return `${Number(d)}/${Number(m)}`; }
+function generalWeekly(user) {
+  const recs = dedupRecords(DB.all().filter(r => r.usuario === user));
+  const byWeek = {};
+  recs.forEach(r => {
+    const k = weekKey(r.fecha);
+    byWeek[k] = byWeek[k] || { vol: 0, dates: new Set() };
+    byWeek[k].vol += recordVolume(r);
+    byWeek[k].dates.add(r.fecha);
+  });
+  return Object.keys(byWeek).sort().map(k => ({
+    week: k, short: weekShort(k), volume: byWeek[k].vol, sessions: byWeek[k].dates.size,
+  }));
+}
+
+// ---- Gráficos SVG (sin librerías) ----
+const CHART_EMPTY = `<div class="chart-empty">Todavía no hay datos suficientes. Cargá algunas sesiones y volvé 💪</div>`;
+
+function svgLine(series, opts = {}) {
+  if (!series.length) return CHART_EMPTY;
+  const W = 320, H = opts.height || 150, padL = 10, padR = 10, padT = 16, padB = 22;
+  const vals = series.map(s => s.value);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { max = max + 1; min = Math.max(0, min - 1); }
+  const iw = W - padL - padR, ih = H - padT - padB, n = series.length;
+  const X = i => padL + (n === 1 ? iw / 2 : iw * i / (n - 1));
+  const Y = v => padT + ih * (1 - (v - min) / (max - min));
+  const pts = series.map((s, i) => [X(i), Y(s.value)]);
+  const path = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const area = `M${pts[0][0].toFixed(1)} ${(H - padB).toFixed(1)} ` +
+    pts.map(p => "L" + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ") +
+    ` L${pts[n - 1][0].toFixed(1)} ${(H - padB).toFixed(1)} Z`;
+  const dots = pts.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i === n - 1 ? 4.5 : 2.6}" class="${i === n - 1 ? "cdot-last" : "cdot"}"/>`).join("");
+  const last = series[n - 1], first = series[0];
+  const fmt = opts.format || (v => String(Math.round(v)));
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#cg)"/>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}
+    <text x="${X(n - 1).toFixed(1)}" y="${(Y(last.value) - 8).toFixed(1)}" class="cval" text-anchor="end">${fmt(last.value)}</text>
+  </svg>`;
+}
+
+function svgBars(items, opts = {}) {
+  if (!items.length) return CHART_EMPTY;
+  const W = 320, H = opts.height || 140, padL = 8, padR = 8, padT = 16, padB = 24;
+  const max = Math.max(...items.map(i => i.value), 1);
+  const iw = W - padL - padR, ih = H - padT - padB, n = items.length;
+  const gap = iw / n, bw = Math.min(30, gap * 0.6);
+  const bars = items.map((it, i) => {
+    const bh = Math.max(2, ih * (it.value / max));
+    const cx = padL + gap * i + gap / 2;
+    const yTop = padT + ih - bh;
+    return `<rect x="${(cx - bw / 2).toFixed(1)}" y="${yTop.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" fill="var(--accent)" opacity="${i === n - 1 ? 1 : 0.5}"/>
+      ${it.value ? `<text x="${cx.toFixed(1)}" y="${(yTop - 4).toFixed(1)}" class="cval" text-anchor="middle">${it.value}</text>` : ""}
+      <text x="${cx.toFixed(1)}" y="${(H - 7).toFixed(1)}" class="cxlabel" text-anchor="middle">${it.short || ""}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">${bars}</svg>`;
+}
+
+function sparkline(values) {
+  if (values.length < 2) return "";
+  const W = 80, H = 24;
+  let min = Math.min(...values), max = Math.max(...values);
+  if (min === max) { max += 1; min -= 1; }
+  const n = values.length;
+  const pts = values.map((v, i) => [i * W / (n - 1), H - 2 - (H - 4) * (v - min) / (max - min)]);
+  const path = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const up = values[n - 1] >= values[0];
+  return `<svg viewBox="0 0 ${W} ${H}" class="spark ${up ? "up" : "down"}"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+// ---- Render de la pantalla ----
+let metricsTab = "general", metricsDay = null, metricsEx = null;
+
+function openMetrics() {
+  showScreen("metrics");
+  renderMetrics();
+  DB.refresh().then(ok => { if (ok) renderMetrics(); });
+}
+
+function syncMetricTabs() {
+  $$("#metrics-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === metricsTab));
+}
+
+function renderMetrics() {
+  syncMetricTabs();
+  const body = $("#metrics-body");
+  if (metricsTab === "general") body.innerHTML = renderGeneral();
+  else if (metricsTab === "dia") body.innerHTML = renderPorDia();
+  else body.innerHTML = renderPorEjercicio();
+  wireMetricPickers();
+}
+
+function statTiles(tiles) {
+  return `<div class="stat-tiles">${tiles.map(t => `<div class="stat-tile"><b>${t.v}</b><small>${t.l}</small></div>`).join("")}</div>`;
+}
+
+function renderGeneral() {
+  const weeks = generalWeekly(currentUser).slice(-10);
+  if (!weeks.length) return `<div class="metric-card">${CHART_EMPTY}</div>`;
+  const totalSes = new Set(dedupRecords(DB.all().filter(r => r.usuario === currentUser)).map(r => r.fecha)).size;
+  const totalVol = dedupRecords(DB.all().filter(r => r.usuario === currentUser)).reduce((s, r) => s + recordVolume(r), 0);
+  const sesiones = weeks.map(w => ({ value: w.sessions, short: w.short }));
+  const vol = weeks.map(w => ({ label: w.week, value: w.volume }));
+  return `
+    ${statTiles([{ v: totalSes, l: "Entrenamientos" }, { v: fmtVol(totalVol), l: "Volumen total" }])}
+    <div class="metric-card">
+      <div class="metric-title">Constancia · sesiones por semana</div>
+      ${svgBars(sesiones)}
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">Volumen total por semana</div>
+      ${svgLine(vol, { format: v => fmtVol(v) })}
+    </div>`;
+}
+
+function renderPorDia() {
+  if (!metricsDay) metricsDay = PLAN.dias[0].id;
+  const chips = PLAN.dias.map(d =>
+    `<button class="day-chip ${d.id === metricsDay ? "on" : ""}" data-dia="${d.id}">${d.nombre}</button>`).join("");
+  const dia = PLAN.dias.find(d => d.id === metricsDay);
+  const serie = daySeries(currentUser, metricsDay);
+  const line = serie.map(s => ({ label: s.label, value: s.value }));
+  let breakdown = "";
+  if (serie.length) {
+    breakdown = dia.ejercicios.map(exDef => {
+      const ex = resolveExercise(exDef, currentUser);
+      const s = exerciseSeries(currentUser, ex.id).map(r => exercisePrimary(r).value);
+      const last = s.length ? s[s.length - 1] : null;
+      const prim = exerciseSeries(currentUser, ex.id).slice(-1)[0];
+      const u = prim ? exercisePrimary(prim).unidad : "";
+      return `<div class="mini-row">
+        <span class="mini-name">${ex.nombre}</span>
+        ${sparkline(s)}
+        <span class="mini-val">${last != null ? (u === "vol" ? fmtVol(last) : last + " " + u) : "—"}</span>
+      </div>`;
+    }).join("");
+  }
+  return `
+    <div class="chips-row">${chips}</div>
+    <div class="metric-card">
+      <div class="metric-title">Volumen de la sesión · ${dia.nombre}</div>
+      ${svgLine(line, { format: v => fmtVol(v) })}
+      <div class="metric-sub">${serie.length} sesión${serie.length === 1 ? "" : "es"} registrada${serie.length === 1 ? "" : "s"}</div>
+    </div>
+    ${breakdown ? `<div class="metric-card"><div class="metric-title">Por ejercicio</div>${breakdown}</div>` : ""}`;
+}
+
+function renderPorEjercicio() {
+  const options = PLAN.dias.map(d =>
+    `<optgroup label="${d.nombre}">` +
+    d.ejercicios.map(exDef => {
+      const ex = resolveExercise(exDef, currentUser);
+      if (!metricsEx) metricsEx = ex.id;
+      return `<option value="${ex.id}" ${ex.id === metricsEx ? "selected" : ""}>${ex.nombre}</option>`;
+    }).join("") + `</optgroup>`).join("");
+  const ex = planLookup(metricsEx, currentUser);
+  const recs = exerciseSeries(currentUser, metricsEx);
+  const serie = recs.map(r => ({ label: r.fecha, value: exercisePrimary(r).value }));
+  const unidad = recs.length ? exercisePrimary(recs[recs.length - 1]).unidad : "kg";
+  const fmt = unidad === "vol" ? (v => fmtVol(v)) : (v => String(Math.round(v)));
+  // récords
+  let recordsHtml = "";
+  if (recs.length) {
+    const pesos = recs.filter(r => (r.medida || "kg") === "kg" && r.kg != null).map(r => Number(r.kg));
+    const bestKg = pesos.length ? Math.max(...pesos) : null;
+    const bestVol = Math.max(...recs.map(r => recordVolume(r)));
+    recordsHtml = statTiles([
+      ...(bestKg != null ? [{ v: bestKg + " kg", l: "Mejor peso" }] : []),
+      { v: fmtVol(bestVol), l: "Mejor volumen" },
+      { v: recs.length, l: "Sesiones" },
+    ]);
+  }
+  const lista = recs.slice(-6).reverse().map(r => {
+    const p = exercisePrimary(r);
+    const val = p.unidad === "vol" ? fmtVol(p.value) : `${p.value} ${p.unidad}`;
+    const extra = (r.kg2 != null && r.kg2 !== "") ? `${r.kg}+${r.kg2} kg` :
+      (r.reps != null && r.reps !== "" ? `${r.reps} reps` : "");
+    const rir = (r.rir != null && r.rir !== "") ? `RIR ${r.rir}` : "";
+    return `<div class="mini-row"><span class="mini-name">${fechaCorta(r.fecha)}</span>
+      <span class="mini-extra">${extra} ${rir}</span>
+      <span class="mini-val">${val}</span></div>`;
+  }).join("");
+  return `
+    <div class="metric-select-wrap">
+      <select id="metric-ex-select" class="metric-select">${options}</select>
+    </div>
+    ${recordsHtml}
+    <div class="metric-card">
+      <div class="metric-title">${ex ? ex.nombre : ""} · progresión</div>
+      ${svgLine(serie, { format: fmt })}
+    </div>
+    ${lista ? `<div class="metric-card"><div class="metric-title">Últimas sesiones</div>${lista}</div>` : ""}`;
+}
+
+function wireMetricPickers() {
+  const sel = $("#metric-ex-select");
+  if (sel) sel.onchange = () => { metricsEx = sel.value; renderMetrics(); };
+  $$("#metrics-body .day-chip").forEach(c => c.onclick = () => { metricsDay = c.dataset.dia; renderMetrics(); });
 }
 
 // ---------------- Confeti de festejo ----------------
@@ -974,6 +1299,8 @@ $$("[data-goto]").forEach(btn => {
   });
 });
 $("#btn-export").addEventListener("click", exportBackup);
+$("#btn-metrics").addEventListener("click", openMetrics);
+$$("#metrics-tabs button").forEach(b => b.addEventListener("click", () => { metricsTab = b.dataset.tab; renderMetrics(); }));
 $$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
 
 // ---------------- Arranque ----------------

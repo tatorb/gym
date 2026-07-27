@@ -174,7 +174,11 @@ Listo: ahora abrís la app tocando su ícono, como cualquier otra app.
   usá las **flechas ‹ ›** de abajo. Los **puntos** te muestran en qué ejercicio
   estás (ej: 3 de 6).
 - **Guardar:** al terminar el **último** ejercicio del día, aparece un **resumen**
-  de toda la sesión.
+  de toda la sesión, con el **progreso** (volumen de hoy vs. la vez pasada y récords).
+- **Métricas:** el botón 📊 (arriba en la pantalla de días) abre los gráficos de
+  progreso: **General** (constancia y volumen por semana), **Por día** (volumen de
+  cada sesión) y **Por ejercicio** (peso a lo largo del tiempo, con récords). Se
+  calcula solo desde tus cargas; no hay que configurar nada.
 - **Cambiar de persona sin salir:** abajo, arriba de las flechas, hay un selector
   **Tato / Gabi**. Al tocarlo saltás al **mismo número de ejercicio del mismo día**
   de la otra persona (útil si entrenan juntos y van comparando).

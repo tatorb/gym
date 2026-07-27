@@ -37,6 +37,9 @@
       <div class="topbar-title">
         <span id="days-user-name">—</span>
       </div>
+      <button class="icon-btn" id="btn-metrics" aria-label="Métricas" title="Métricas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 16v-5M13 16V9M18 16V7"/></svg>
+      </button>
       <button class="icon-btn" id="btn-export" aria-label="Exportar respaldo" title="Exportar respaldo">⤓</button>
     </header>
     <div class="greeting">
@@ -85,6 +88,21 @@
     <div class="summary-actions">
       <button class="btn-primary" data-goto="days">Volver al menú</button>
     </div>
+  </section>
+
+  <!-- ====================== PANTALLA 5: MÉTRICAS ====================== -->
+  <section id="screen-metrics" class="screen">
+    <header class="topbar">
+      <button class="icon-btn" data-goto="days" aria-label="Volver a los días">‹</button>
+      <div class="topbar-title">Métricas</div>
+      <div style="width:44px"></div>
+    </header>
+    <div class="metrics-tabs" id="metrics-tabs">
+      <button data-tab="general" class="on">General</button>
+      <button data-tab="dia">Por día</button>
+      <button data-tab="ejercicio">Por ejercicio</button>
+    </div>
+    <div class="metrics-body" id="metrics-body"></div>
   </section>
 
   <!-- Cartel emergente (toast) -->
