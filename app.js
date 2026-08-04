@@ -376,6 +376,8 @@ const ICONS = {
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg>',
   target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
 };
 
 // ---------------- Elegir usuario ----------------
@@ -512,12 +514,9 @@ function refreshDoneDots() {
   $$("#dots .dot").forEach((d, i) => d.classList.toggle("done", hechos.has(exercises[i]?.id)));
 }
 
-// Re-dibuja los historiales visibles (ej: después de bajar datos del server).
+// Re-dibuja las líneas "Última carga" visibles (ej: después de bajar datos del server).
 function refreshVisibleHistories() {
-  exercises.forEach((ex, i) => {
-    const el = $(`#hist-${i}`);
-    if (el) renderHistoryInto(el, ex.id);
-  });
+  exercises.forEach((ex, i) => refreshLastLine(i, ex));
   refreshDoneDots();
 }
 
@@ -576,20 +575,20 @@ function ringSVG(remFrac) {
 function renderRestInto(el) {
   const rem = restRemaining();
   if (rem === null) {
-    el.className = "rest-timer";
-    el.innerHTML = `<button class="rest-start" type="button">${ICONS.clock}<span>Descanso ${REST.total}s</span></button>`;
-    el.querySelector("button").onclick = startRest;
-    return;
+    el.className = "ex-chip rest-chip";
+    el.innerHTML = `${ICONS.clock}<span>Descanso</span>`;
+    el.onclick = startRest;
+  } else if (rem === 0) {
+    el.className = "ex-chip rest-chip done";
+    el.innerHTML = `${ICONS.clock}<span>¡Listo!</span>`;
+    el.onclick = stopRest;
+  } else {
+    el.className = "ex-chip rest-chip on";
+    el.innerHTML = `${ICONS.clock}<span>${rem}s</span>`;
+    el.onclick = stopRest;
   }
-  const done = rem === 0;
-  el.className = "rest-timer running" + (done ? " done" : "");
-  el.innerHTML = `
-    <div class="rest-ring">${ringSVG(done ? 0 : rem / REST.total)}<span class="rest-num">${done ? "¡Ya!" : rem}</span></div>
-    <div class="rest-label">${done ? "Descanso listo" : "Descansando…"}</div>
-    <button class="rest-action" type="button">${done ? "Reiniciar" : "Cancelar"}</button>`;
-  el.querySelector(".rest-action").onclick = done ? startRest : stopRest;
 }
-function renderRestAll() { $$(".rest-timer").forEach(renderRestInto); }
+function renderRestAll() { $$(".rest-chip").forEach(renderRestInto); }
 function startRest() {
   ensureAudio();
   REST.endAt = performance.now() + REST.total * 1000;
@@ -608,76 +607,104 @@ function tickRest() {
     REST.alarmed = true;
     restAlarm();
     if (REST.tick) { clearInterval(REST.tick); REST.tick = null; } // ya no hace falta seguir
+    setTimeout(() => { if (REST.alarmed) stopRest(); }, 4000);     // vuelve a "Descanso" solo
   }
   renderRestAll();
 }
 
+// Resumen corto de una carga (para la línea "Última").
+function formatRecord(r) {
+  const u = UNIDAD[r.medida] || "kg";
+  let s = (r.kg2 ?? "") !== ""
+    ? `${r.kg ?? "—"} + ${r.kg2} ${u}`
+    : ((r.kg ?? "") !== "" ? `${r.kg} ${u}` : "—");
+  if ((r.reps ?? "") !== "") s += ` × ${r.reps}`;
+  if ((r.rir ?? "") !== "") s += ` · RIR ${r.rir}`;
+  return s;
+}
+// Actualiza la línea "Última carga" de una tarjeta.
+function refreshLastLine(index, ex, el) {
+  el = el || document.getElementById(`last-${index}`);
+  if (!el) return;
+  const last = DB.history(currentUser, ex.id)[0];
+  el.innerHTML = last
+    ? `<span class="ex-last-k">Última</span><span class="ex-last-v">${formatRecord(last)}</span><span class="ex-last-m">Historial ›</span>`
+    : `<span class="ex-last-k">Sin registros</span><span class="ex-last-v"></span><span class="ex-last-m">Historial ›</span>`;
+  el.onclick = () => openHistorial(ex, index);
+}
+
+// Tarjeta de ejercicio compacta.
 function buildExerciseCard(ex, index) {
   const frag = document.createElement("div");
-
-  // Encabezado: tarjeta hero con gradiente + tiles de series/reps
-  const header = document.createElement("div");
-  header.className = "ex-header";
-  const esSeg = ex.medida === "seg";
-  header.innerHTML = `
-    <div class="ex-hero">
-      <div class="ex-hero-glow"></div>
-      <h2 class="ex-name">${ex.nombre}</h2>
-      <div class="hero-tiles">
-        <div class="hero-tile">
-          <span class="tile-ico">${ICONS.layers}</span>
-          <b>${ex.series}</b><small>Series</small>
-        </div>
-        <div class="hero-tile">
-          <span class="tile-ico">${esSeg ? ICONS.clock : ICONS.target}</span>
-          <b>${ex.reps}</b><small>${esSeg ? "Tiempo" : "Reps"}</small>
-        </div>
-      </div>
-    </div>
-    <p class="ex-cue">${ex.indicacion || ""}</p>
-    ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
-  frag.appendChild(header);
-
-  // Timer de descanso (compartido entre ejercicios)
-  const restEl = document.createElement("div");
-  restEl.className = "rest-timer";
-  frag.appendChild(restEl);
-  renderRestInto(restEl);
-
-  // Video (reproductor + opciones; o botón para agregar si no hay)
-  frag.appendChild(buildVideoBlock(ex));
-
-  // Historial
-  const histLabel = document.createElement("div");
-  histLabel.className = "section-label";
-  histLabel.textContent = "Historial";
-  frag.appendChild(histLabel);
-
-  const hist = document.createElement("div");
-  hist.className = "history";
-  hist.id = `hist-${index}`;
-  frag.appendChild(hist);
-  renderHistoryInto(hist, ex.id);
-
-  // Formulario de carga
-  const formLabel = document.createElement("div");
-  formLabel.className = "section-label";
-  formLabel.textContent = "Cargar hoy";
-  frag.appendChild(formLabel);
-
-  const form = document.createElement("div");
-  form.className = "load-form";
   const ids = cardIds(index);
-  form.innerHTML = fieldsHTML(ids, ex, {}) +
-    `<button class="btn-save" id="save-${index}">Guardar</button>`;
-  frag.appendChild(form);
+  const hasNota = !!ex.notaUsuario;
+  frag.innerHTML = `
+    <div class="ex-top">
+      <h2 class="ex-name">${ex.nombre}</h2>
+      <span class="ex-target">${objetivo(ex)}</span>
+    </div>
+    <div class="ex-chips">
+      <button class="ex-chip" id="chip-tec-${index}" type="button">${ICONS.info}<span>Técnica${hasNota ? " •" : ""}</span></button>
+      <button class="ex-chip" id="chip-vid-${index}" type="button">${ICONS.play}<span>Video</span></button>
+      <button class="ex-chip rest-chip" type="button"></button>
+    </div>
+    <button class="ex-last" id="last-${index}" type="button"></button>
+    <div class="section-label">Cargar hoy</div>
+    <div class="load-form">${fieldsHTML(ids, ex, {})}<button class="btn-save" id="save-${index}">Guardar</button></div>`;
 
-  attachToggle(form, ids);
-  form.querySelector(`#save-${index}`).addEventListener("click", () => saveExercise(index));
+  attachToggle(frag, ids);
+  frag.querySelector(`#save-${index}`).addEventListener("click", () => saveExercise(index));
+  frag.querySelector(`#chip-tec-${index}`).addEventListener("click", () => openTecnica(ex));
+  frag.querySelector(`#chip-vid-${index}`).addEventListener("click", () => openVideoModal(ex));
+  renderRestInto(frag.querySelector(".rest-chip"));
+  refreshLastLine(index, ex, frag.querySelector(`#last-${index}`));
   return frag;
 }
 
-function renderHistoryInto(el, exerciseId) {
+// Ventana genérica reutilizable.
+function makeOverlay(html) {
+  const o = document.createElement("div");
+  o.className = "modal-overlay";
+  o.innerHTML = html;
+  document.body.appendChild(o);
+  const close = () => o.remove();
+  o.addEventListener("click", (e) => { if (e.target === o) close(); });
+  o.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
+  return o;
+}
+function openTecnica(ex) {
+  makeOverlay(`
+    <div class="modal">
+      <h3>${ex.nombre}</h3>
+      <div class="modal-sub">${objetivo(ex)}</div>
+      <p class="tec-cue">${ex.indicacion || "Sin indicación técnica."}</p>
+      ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}
+      <button class="btn-ghost" data-close style="margin-top:16px">Cerrar</button>
+    </div>`);
+}
+function openVideoModal(ex) {
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>Video · ${ex.nombre}</h3>
+      <div class="vid-slot"></div>
+      <button class="btn-ghost" data-close style="margin-top:14px">Cerrar</button>
+    </div>`);
+  o.querySelector(".vid-slot").appendChild(buildVideoBlock(ex));
+}
+function openHistorial(ex, index) {
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>Historial · ${ex.nombre}</h3>
+      <div class="modal-sub">Tocá una carga para editarla o eliminarla</div>
+      <div class="history" id="hist-modal"></div>
+      <button class="btn-ghost" data-close style="margin-top:14px">Cerrar</button>
+    </div>`);
+  const body = o.querySelector("#hist-modal");
+  const rerender = () => { renderHistoryInto(body, ex.id, rerender); refreshLastLine(index, ex); refreshDoneDots(); };
+  renderHistoryInto(body, ex.id, rerender);
+}
+
+function renderHistoryInto(el, exerciseId, onChange) {
   const rows = DB.history(currentUser, exerciseId).slice(0, 8);
   if (rows.length === 0) {
     el.innerHTML = `<div class="history-empty">Todavía no hay cargas. ¡Esta es la primera!</div>`;
@@ -706,7 +733,7 @@ function renderHistoryInto(el, exerciseId) {
   el.querySelectorAll(".hist-row").forEach(row => {
     row.addEventListener("click", () => {
       const rec = DB.all().find(r => r.id === row.dataset.id);
-      if (rec) openEditModal(rec, () => { renderHistoryInto(el, exerciseId); refreshDoneDots(); });
+      if (rec) openEditModal(rec, onChange || (() => { renderHistoryInto(el, exerciseId, onChange); refreshDoneDots(); }));
     });
   });
 }
@@ -799,7 +826,7 @@ async function commitLoad(index, f) {
     ...toDbFields(f),
   });
   clearForm(index);
-  renderHistoryInto($(`#hist-${index}`), ex.id);
+  refreshLastLine(index, ex);
   markDotDone(index);
   renderStatusBar();
 }
