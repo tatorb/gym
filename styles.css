@@ -166,6 +166,45 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
 .day-card .day-count { color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 4px; }
 .day-chevron { color: var(--text-faint); display: flex; flex: 0 0 auto; }
 .day-chevron svg { width: 22px; height: 22px; }
+/* Día que "toca" (más brillante) */
+.day-due {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 14px 36px var(--accent-glow);
+  background: radial-gradient(150% 130% at 0% 0%, var(--accent-soft), transparent 48%), var(--bg-elev);
+}
+.day-due .day-badge { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
+.day-due .day-count { color: var(--accent); }
+.due-badge {
+  display: inline-block; margin-left: 8px; vertical-align: middle;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+  font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+  box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+/* Timer de descanso */
+.rest-timer { margin: 14px 0 2px; }
+.rest-start {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
+  border-radius: 16px; padding: 14px; font-size: 16px; font-weight: 700;
+}
+.rest-start svg { width: 20px; height: 20px; color: var(--accent); }
+.rest-start:active { background: var(--bg-elev-2); }
+.rest-timer.running {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg-elev); border: 1px solid var(--accent); border-radius: 16px; padding: 12px 14px;
+}
+.rest-timer.done { border-color: var(--ok); }
+.rest-ring { position: relative; width: 44px; height: 44px; flex: 0 0 44px; }
+.rest-ring .ring { width: 44px; height: 44px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
+.ring-fg { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .2s linear; }
+.rest-timer.done .ring-fg { stroke: var(--ok); }
+.rest-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+.rest-label { flex: 1; font-weight: 700; color: var(--text-dim); font-size: 14px; }
+.rest-timer.done .rest-label { color: var(--ok); }
+.rest-action { background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text); border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 14px; }
+.rest-action:active { filter: brightness(1.2); }
 
 /* ===================== TARJETAS DE EJERCICIO (carrusel) ===================== */
 .exercise-viewport {

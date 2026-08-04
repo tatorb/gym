@@ -389,24 +389,62 @@ function selectUser(user) {
   DB.refresh(); // trae el historial del servidor si hay internet
 }
 
+// ¿Cuántos días pasaron desde una fecha hasta hoy?
+function daysAgoFrom(fecha) {
+  const d1 = Date.parse(fecha + "T00:00:00Z");
+  const d2 = Date.parse(hoyISO() + "T00:00:00Z");
+  return Math.round((d2 - d1) / 86400000);
+}
+function fraseHace(n) {
+  if (n <= 0) return "hoy";
+  if (n === 1) return "ayer";
+  return `hace ${n} días`;
+}
+function lastSessionDate(user, diaId) {
+  const fechas = DB.all().filter(r => r.usuario === user && r.dia === diaId).map(r => r.fecha).sort();
+  return fechas.length ? fechas[fechas.length - 1] : null;
+}
+
 // ---------------- Menú de días ----------------
 function renderDays() {
   const nombre = PLAN.usuarios[currentUser]?.nombre || currentUser || "";
   $("#greeting-name").textContent = nombre;
   $("#greeting-avatar").textContent = (nombre.charAt(0) || "?").toUpperCase();
+
+  // Info de última sesión por día + cuál "toca" (el que hace más que no entrenás).
+  const info = PLAN.dias.map(dia => {
+    const last = lastSessionDate(currentUser, dia.id);
+    return { dia, last, ago: last !== null ? daysAgoFrom(last) : Infinity };
+  });
+  let dueId = null, maxAgo = -1;
+  info.forEach(x => { if (x.ago > maxAgo) { maxAgo = x.ago; dueId = x.dia.id; } });
+
+  // Saludo: último entreno general.
+  const entrenados = info.filter(x => x.last !== null).sort((a, b) => a.last < b.last ? 1 : -1);
+  const sub = $(".greeting-sub");
+  if (entrenados.length) {
+    const t = entrenados[0];
+    sub.textContent = `Último entreno: ${fraseHace(daysAgoFrom(t.last))} · ${t.dia.nombre}`;
+  } else {
+    sub.textContent = "¡Arrancá tu primer entreno! 💪";
+  }
+
   const cont = $("#days-list");
   cont.innerHTML = "";
-  PLAN.dias.forEach((dia, i) => {
+  info.forEach((x, i) => {
+    const dia = x.dia;
     const n = dia.ejercicios.length;
+    const due = dia.id === dueId;
+    const ultimo = x.last !== null ? `último ${fraseHace(x.ago)}` : "sin registros";
     const card = document.createElement("button");
-    card.className = "day-card";
+    card.className = "day-card" + (due ? " day-due" : "");
     card.style.animationDelay = `${i * 70}ms`;
     card.innerHTML = `
       <div class="day-badge">${ICONS.dumbbell}</div>
       <div class="day-body">
-        <span class="day-name">${dia.nombre}</span>
+        <span class="day-name">${dia.nombre}${due ? `<span class="due-badge">Toca</span>` : ""}</span>
         <span class="day-sub">${dia.subtitulo || ""}</span>
-        <span class="day-count">${n} ejercicios</span>
+        <span class="day-count">${n} ejercicios · ${ultimo}</span>
       </div>
       <div class="day-chevron">${ICONS.chevron}</div>`;
     card.addEventListener("click", () => openDay(dia));
@@ -493,6 +531,85 @@ function renderExercises() {
     card.appendChild(buildExerciseCard(ex, i));
     track.appendChild(card);
   });
+  renderRestAll();
+}
+
+// ==================== TIMER DE DESCANSO ====================
+const REST = { total: 50, endAt: null, alarmed: false, tick: null };
+let audioCtx = null;
+
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch { /* sin audio */ }
+}
+function beep() {
+  if (!audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = "sine"; o.frequency.value = 880;
+    const t = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    o.start(t); o.stop(t + 0.42);
+  } catch { /* ignorar */ }
+}
+function restAlarm() {
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  beep(); setTimeout(beep, 220);
+  toast("¡Descanso terminado! 💪");
+}
+function restRemaining() {
+  if (REST.endAt === null) return null;
+  return Math.max(0, Math.ceil((REST.endAt - performance.now()) / 1000));
+}
+function ringSVG(remFrac) {
+  const r = 19, c = 2 * Math.PI * r, off = c * (1 - remFrac);
+  return `<svg viewBox="0 0 44 44" class="ring">
+    <circle cx="22" cy="22" r="${r}" class="ring-bg"/>
+    <circle cx="22" cy="22" r="${r}" class="ring-fg" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+  </svg>`;
+}
+function renderRestInto(el) {
+  const rem = restRemaining();
+  if (rem === null) {
+    el.className = "rest-timer";
+    el.innerHTML = `<button class="rest-start" type="button">${ICONS.clock}<span>Descanso ${REST.total}s</span></button>`;
+    el.querySelector("button").onclick = startRest;
+    return;
+  }
+  const done = rem === 0;
+  el.className = "rest-timer running" + (done ? " done" : "");
+  el.innerHTML = `
+    <div class="rest-ring">${ringSVG(done ? 0 : rem / REST.total)}<span class="rest-num">${done ? "¡Ya!" : rem}</span></div>
+    <div class="rest-label">${done ? "Descanso listo" : "Descansando…"}</div>
+    <button class="rest-action" type="button">${done ? "Reiniciar" : "Cancelar"}</button>`;
+  el.querySelector(".rest-action").onclick = done ? startRest : stopRest;
+}
+function renderRestAll() { $$(".rest-timer").forEach(renderRestInto); }
+function startRest() {
+  ensureAudio();
+  REST.endAt = performance.now() + REST.total * 1000;
+  REST.alarmed = false;
+  if (!REST.tick) REST.tick = setInterval(tickRest, 200);
+  renderRestAll();
+}
+function stopRest() {
+  REST.endAt = null; REST.alarmed = false;
+  if (REST.tick) { clearInterval(REST.tick); REST.tick = null; }
+  renderRestAll();
+}
+function tickRest() {
+  const rem = restRemaining();
+  if (rem === 0 && !REST.alarmed) {
+    REST.alarmed = true;
+    restAlarm();
+    if (REST.tick) { clearInterval(REST.tick); REST.tick = null; } // ya no hace falta seguir
+  }
+  renderRestAll();
 }
 
 function buildExerciseCard(ex, index) {
@@ -520,6 +637,12 @@ function buildExerciseCard(ex, index) {
     <p class="ex-cue">${ex.indicacion || ""}</p>
     ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}`;
   frag.appendChild(header);
+
+  // Timer de descanso (compartido entre ejercicios)
+  const restEl = document.createElement("div");
+  restEl.className = "rest-timer";
+  frag.appendChild(restEl);
+  renderRestInto(restEl);
 
   // Video (reproductor + opciones; o botón para agregar si no hay)
   frag.appendChild(buildVideoBlock(ex));
