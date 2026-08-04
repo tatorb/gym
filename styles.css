@@ -7,10 +7,10 @@
   --text: #f4f6fb;
   --text-dim: #98a2b6;
   --text-faint: #616b7e;
-  --accent: #3f6ffb;              /* se reemplaza según el usuario */
-  --accent-2: #5a86ff;
-  --accent-soft: rgba(63,111,251,0.15);
-  --accent-glow: rgba(63,111,251,0.40);
+  --accent: #4468d6;              /* se reemplaza según el usuario */
+  --accent-2: #5878da;
+  --accent-soft: rgba(68,104,214,0.13);
+  --accent-glow: rgba(68,104,214,0.20);
   --danger: #f2555a;
   --ok: #2fd07a;
   --radius: 22px;
@@ -36,9 +36,9 @@ html, body {
 
 body {
   display: flex; flex-direction: column; min-height: 100dvh;
-  /* leve resplandor azulado en la parte superior, como la referencia */
+  /* leve resplandor azulado en la parte superior (sutil) */
   background:
-    radial-gradient(120% 60% at 50% -10%, rgba(63,111,251,0.10), transparent 60%),
+    radial-gradient(120% 60% at 50% -10%, rgba(68,104,214,0.05), transparent 60%),
     var(--bg);
 }
 
@@ -47,15 +47,16 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Acento por usuario */
 body[data-user="tato"] {
-  --accent: #3f6ffb; --accent-2: #5a86ff;
-  --accent-soft: rgba(63,111,251,0.16); --accent-glow: rgba(63,111,251,0.42);
+  --accent: #4468d6; --accent-2: #5878da;
+  --accent-soft: rgba(68,104,214,0.13); --accent-glow: rgba(68,104,214,0.20);
 }
 body[data-user="gabi"] {
-  --accent: #e24aa6; --accent-2: #f472c7;
-  --accent-soft: rgba(226,74,166,0.16); --accent-glow: rgba(226,74,166,0.40);
+  --accent: #cf5794; --accent-2: #d873ab;
+  --accent-soft: rgba(207,87,148,0.13); --accent-glow: rgba(207,87,148,0.20);
 }
-/* el resplandor de fondo sigue al usuario activo */
-body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(226,74,166,0.10), transparent 60%), var(--bg); }
+/* el resplandor de fondo sigue al usuario activo (bien sutil) */
+body { background: radial-gradient(120% 60% at 50% -10%, rgba(68,104,214,0.05), transparent 60%), var(--bg); }
+body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(207,87,148,0.05), transparent 60%), var(--bg); }
 
 /* ===================== PANTALLAS ===================== */
 .screen { display: none; flex-direction: column; flex: 1 1 auto; min-height: 0; }
@@ -102,12 +103,12 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
 }
 .btn-user:active { transform: scale(0.97); }
 .btn-user[data-user="tato"] {
-  background: linear-gradient(150deg, #2f5bef, #6a92ff);
-  box-shadow: 0 12px 34px rgba(63,111,251,0.40);
+  background: linear-gradient(150deg, #3a58c4, #5878da);
+  box-shadow: 0 10px 24px rgba(68,104,214,0.22);
 }
 .btn-user[data-user="gabi"] {
-  background: linear-gradient(150deg, #d43b93, #f57ac9);
-  box-shadow: 0 12px 34px rgba(226,74,166,0.36);
+  background: linear-gradient(150deg, #b8447f, #cf5794);
+  box-shadow: 0 10px 24px rgba(207,87,148,0.22);
 }
 
 /* ===================== BARRA SUPERIOR (topbar) ===================== */
@@ -228,14 +229,16 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 16px 18px; margin: 4px 0 14px; border-radius: 18px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 12px 30px var(--accent-glow);
+  background:
+    linear-gradient(135deg, rgba(0,0,0,0.12), rgba(0,0,0,0.30)),
+    linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 20px var(--accent-glow);
   animation: hero-in .35s ease;
 }
 @keyframes hero-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
 .ex-top::before {
   content: ""; position: absolute; top: -60%; right: -12%; width: 55%; height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.30), transparent 60%);
+  background: radial-gradient(circle, rgba(255,255,255,0.14), transparent 60%);
   pointer-events: none;
 }
 .ex-name { position: relative; font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -0.4px; flex: 1; min-width: 0; color: #fff; }
@@ -379,7 +382,7 @@ body[data-user="gabi"] { background: radial-gradient(120% 60% at 50% -10%, rgba(
   margin-top: 16px; width: 100%;
   background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: none;
   border-radius: 16px; padding: 16px; font-size: 17px; font-weight: 800;
-  box-shadow: 0 10px 26px var(--accent-glow);
+  box-shadow: 0 8px 18px var(--accent-glow);
   transition: transform .08s ease, filter .15s ease;
 }
 .btn-save:active { transform: scale(0.98); filter: brightness(1.08); }
