@@ -213,32 +213,26 @@ function fieldsHTML(ids, ex, init) {
         `<button type="button" data-m="${m}" class="${m === med ? "on" : ""}">${MEDIDAS[m]}</button>`).join("")}
     </div>`;
   }
+  // Campos numéricos: todos en un solo renglón. La nota va en el segundo.
   if (ss) {
     h += `<div class="input-row">
       <div class="field"><label>${ss[0]}</label>
         <input type="number" inputmode="decimal" step="0.5" id="${ids.val}" value="${num(init.val)}" placeholder="kg" /></div>
       <div class="field"><label>${ss[1]}</label>
         <input type="number" inputmode="decimal" step="0.5" id="${ids.val2}" value="${num(init.val2)}" placeholder="kg" /></div>
-    </div>
-    <div class="input-row">
       <div class="field"><label>RIR</label>
         <input type="number" inputmode="numeric" step="1" id="${ids.rir}" value="${num(init.rir)}" placeholder="1" /></div>
-      <div class="field" aria-hidden="true" style="visibility:hidden"></div>
     </div>`;
   } else if (ex.repsVar) {
-    // Ejercicio con rango de reps: peso + reps hechas (fila 1) y RIR (fila 2).
-    // El campo Reps solo aplica cuando la medida es peso (kg).
+    // Peso + reps hechas + RIR, en un renglón. Reps solo aplica cuando la medida es peso.
     const showReps = med === "kg" ? "" : "display:none";
     h += `<div class="input-row">
       <div class="field"><label id="${ids.vlabel}">${MEDIDAS[med]}</label>
         <input type="number" inputmode="decimal" step="0.5" id="${ids.val}" value="${num(init.val)}" placeholder="—" /></div>
       <div class="field" id="${ids.repsField}" style="${showReps}"><label>Reps</label>
         <input type="number" inputmode="numeric" step="1" id="${ids.reps}" value="${num(init.reps)}" placeholder="—" /></div>
-    </div>
-    <div class="input-row">
       <div class="field"><label>RIR</label>
         <input type="number" inputmode="numeric" step="1" id="${ids.rir}" value="${num(init.rir)}" placeholder="—" /></div>
-      <div class="field" aria-hidden="true" style="visibility:hidden"></div>
     </div>`;
   } else {
     h += `<div class="input-row">
