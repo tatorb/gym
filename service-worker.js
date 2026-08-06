@@ -1,12 +1,16 @@
 // ============================================================
 //  service-worker.js
 //  Hace que la app abra sin internet y sea instalable (PWA).
-//  Estrategia: "stale-while-revalidate" para los archivos propios
-//  (muestra la copia guardada al instante y la actualiza de fondo).
+//  Estrategia: "network-first" para los archivos propios.
+//   - Con internet: SIEMPRE trae la última versión del servidor
+//     (y guarda una copia).
+//   - Sin internet: usa la copia guardada.
+//  Así los cambios se ven apenas hay conexión, sin quedar pegado
+//  a una versión vieja en caché.
 // ============================================================
 
-// Si cambiás archivos y no ves los cambios, subí este número (v2, v3...).
-const CACHE = "gym-cache-v1";
+// Si cambiás archivos y no ves los cambios, subí este número (v3, v4...).
+const CACHE = "gym-cache-v2";
 
 const ASSETS = [
   "./",
@@ -45,16 +49,18 @@ self.addEventListener("fetch", (event) => {
   // Solo manejamos archivos de la propia app. A Supabase / esm.sh los dejamos pasar directo.
   if (url.origin !== self.location.origin) return;
 
+  // Network-first: pedimos al servidor; si falla (sin internet), usamos la copia guardada.
   event.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(req);
-      const network = fetch(req)
-        .then((res) => {
-          if (res && res.status === 200) cache.put(req, res.clone());
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() =>
+        caches.match(req).then((cached) => cached || caches.match("./index.html"))
+      )
   );
 });
