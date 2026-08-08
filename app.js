@@ -1368,7 +1368,7 @@ function launchConfetti() {
   canvas.width = W() * dpr; canvas.height = H() * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const colors = ["#3B82F6", "#EC4899", "#f59e0b", "#22c55e", "#a855f7", "#f5f5f5"];
+  const colors = ["#FFFFFF", "#CFCFCF", "#5B7382", "#8A8A8D", "#3A3A3D"];
   const N = 160;
   const parts = [];
   for (let i = 0; i < N; i++) {

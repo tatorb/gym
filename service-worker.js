@@ -10,7 +10,7 @@
 // ============================================================
 
 // Si cambiás archivos y no ves los cambios, subí este número (v3, v4...).
-const CACHE = "gym-cache-v2";
+const CACHE = "gym-cache-v3";
 
 const ASSETS = [
   "./",
@@ -25,6 +25,11 @@ const ASSETS = [
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
   "./icons/favicon-32.png",
+  "./fonts/urbanist-400.woff2",
+  "./fonts/urbanist-500.woff2",
+  "./fonts/urbanist-600.woff2",
+  "./fonts/urbanist-700.woff2",
+  "./fonts/urbanist-800.woff2",
 ];
 
 self.addEventListener("install", (event) => {
