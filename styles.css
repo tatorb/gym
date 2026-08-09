@@ -469,7 +469,8 @@ body[data-user] {
   position: fixed; inset: 0; z-index: 400;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 18px; cursor: pointer;
-  background: var(--accent); color: var(--accent-fg);
+  background: color-mix(in srgb, var(--accent) 50%, transparent); color: var(--accent-fg);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
   padding: calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom));
   opacity: 0; transition: opacity .35s ease;
   -webkit-tap-highlight-color: transparent; user-select: none;
