@@ -24,6 +24,17 @@
   --raise: 0 3px 8px rgba(0,0,0,0.45);            /* elevación de botón */
   --bevel: inset 0 1px 0 rgba(255,255,255,0.10);  /* brillo del borde superior */
   --sink: inset 0 2px 4px rgba(0,0,0,0.5);        /* hundido / press-in */
+  /* Degradé de relleno: aclara arriba, oscurece sutilmente abajo (relieve) */
+  --sheen:      linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0) 34%, rgba(0,0,0,0.17));
+  --sheen-dark: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0) 36%, rgba(0,0,0,0.20));
+  --sheen-card: linear-gradient(180deg, rgba(255,255,255,0.038), rgba(255,255,255,0) 42%, rgba(0,0,0,0.13));
+  /* Borde 1px degradé con reflejo arriba (respeta el radio) */
+  --edge:      linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.06) 48%, rgba(0,0,0,0.12));
+  --edge-soft: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.03) 52%, rgba(0,0,0,0.10));
+  /* Rellenos compuestos (degradé + borde reflejo 1px), listos para usar */
+  --fill-accent: var(--sheen) padding-box, linear-gradient(var(--accent), var(--accent)) padding-box, var(--edge) border-box;
+  --fill-dark:   var(--sheen-dark) padding-box, linear-gradient(#1b1b1d, #1b1b1d) padding-box, var(--edge) border-box;
+  --fill-card:   var(--sheen-card) padding-box, linear-gradient(var(--bg-elev), var(--bg-elev)) padding-box, var(--edge-soft) border-box;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -53,6 +64,11 @@ body[data-user="tato"] {
 }
 body[data-user="gabi"] {
   --accent: #f4d7e1; --accent-fg: #0c0c0d; --accent-soft: rgba(244,215,225,0.20);
+}
+/* --fill-accent debe re-resolver var(--accent) en el scope del usuario
+   (si se define solo en :root, queda "horneado" con el acento por defecto). */
+body[data-user] {
+  --fill-accent: var(--sheen) padding-box, linear-gradient(var(--accent), var(--accent)) padding-box, var(--edge) border-box;
 }
 
 /* ===================== PANTALLAS ===================== */
@@ -547,6 +563,66 @@ body[data-user="gabi"] {
 .spark { width: 76px; height: 24px; flex: 0 0 auto; }
 .spark.up { color: var(--text-dim); }
 .spark.down { color: var(--danger); }
+
+/* ============================================================
+   RELIEVE GLOBAL
+   Degradé de relleno (oscurece sutil hacia abajo) + borde 1px
+   con reflejo arriba y degradé (respeta el radio). Siempre fino.
+   ============================================================ */
+
+/* Superficies con acento (color) */
+.btn-save, .btn-primary, .ex-top, .greeting-avatar,
+.metric-toggle button.on, .metrics-tabs button.on, .uswitch-btn.on,
+.day-chip.on, .rest-chip.on, .day-due .day-badge {
+  border: 1px solid transparent;
+  background: var(--fill-accent);
+}
+
+/* Pastillas oscuras (botones/segmentos/selects) */
+.icon-btn, .ex-chip, .vaction, .video-link-btn, .btn-ghost, .arrow,
+.uswitch-btn, .day-chip, .metrics-tabs button, .metric-select {
+  border: 1px solid transparent;
+  background: var(--fill-dark);
+}
+
+/* Tarjetas y superficies elevadas */
+.day-card, .hist-row, .ex-last, .metric-card, .stat-tile, .prog-card,
+.sum-row, .video-facade, .field input, .field textarea {
+  border: 1px solid transparent;
+  background: var(--fill-card);
+}
+
+/* Contenedores con relleno propio */
+.day-badge {
+  border: 1px solid transparent;
+  background: var(--sheen-card) padding-box, linear-gradient(var(--bg-elev-2), var(--bg-elev-2)) padding-box, var(--edge-soft) border-box;
+}
+.ex-note, .toast, .pr-chip {
+  border: 1px solid transparent;
+  background: var(--sheen-dark) padding-box, linear-gradient(var(--bg-elev-2), var(--bg-elev-2)) padding-box, var(--edge) border-box;
+}
+.modal {
+  border: 1px solid transparent;
+  background: var(--sheen-card) padding-box, linear-gradient(var(--bg-elev), var(--bg-elev)) padding-box, var(--edge-soft) border-box;
+}
+
+/* Botones del selector de usuario (rellenos propios por persona) */
+.btn-user[data-user="tato"] {
+  border: 1px solid transparent;
+  background: var(--sheen) padding-box, linear-gradient(#5B7382, #5B7382) padding-box, var(--edge) border-box;
+  color: #FFFFFF;
+}
+.btn-user[data-user="gabi"] {
+  border: 1px solid transparent;
+  background: var(--sheen) padding-box, linear-gradient(#f4d7e1, #f4d7e1) padding-box, var(--edge) border-box;
+  color: #0c0c0d;
+}
+
+/* Track del toggle: hundido, con borde fino degradé */
+.metric-toggle {
+  border: 1px solid transparent;
+  background: linear-gradient(#0e0e0f, #0e0e0f) padding-box, var(--edge-soft) border-box;
+}
 
 /* Pantallas grandes: centrar el contenido como en un teléfono */
 @media (min-width: 640px) {
