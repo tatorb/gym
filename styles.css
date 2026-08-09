@@ -49,10 +49,10 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Acento neutro por usuario (Tato claro/grafito · Gabi gris azulado MRB) */
 body[data-user="tato"] {
-  --accent: #ECEDEF; --accent-fg: #0c0c0d; --accent-soft: rgba(255,255,255,0.08);
+  --accent: #5B7382; --accent-fg: #FFFFFF; --accent-soft: rgba(91,115,130,0.18);
 }
 body[data-user="gabi"] {
-  --accent: #5B7382; --accent-fg: #FFFFFF; --accent-soft: rgba(91,115,130,0.18);
+  --accent: #f4d7e1; --accent-fg: #0c0c0d; --accent-soft: rgba(244,215,225,0.20);
 }
 
 /* ===================== PANTALLAS ===================== */
@@ -98,8 +98,8 @@ body[data-user="gabi"] {
   transition: transform .1s ease, box-shadow .15s ease;
 }
 .btn-user:active { transform: translateY(1px); box-shadow: var(--sink); }
-.btn-user[data-user="tato"] { background: #ECEDEF; color: #0c0c0d; border-color: transparent; }
-.btn-user[data-user="gabi"] { background: #5B7382; color: #FFFFFF; border-color: transparent; }
+.btn-user[data-user="tato"] { background: #5B7382; color: #FFFFFF; border-color: transparent; }
+.btn-user[data-user="gabi"] { background: #f4d7e1; color: #0c0c0d; border-color: transparent; }
 
 /* ===================== BARRA SUPERIOR (topbar) ===================== */
 .topbar {
