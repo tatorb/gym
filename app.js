@@ -529,6 +529,7 @@ function renderExercises() {
 
 // ==================== TIMER DE DESCANSO ====================
 const REST = { total: 50, endAt: null, alarmed: false, tick: null };
+let restOverlay = null;
 let audioCtx = null;
 
 function ensureAudio() {
@@ -583,16 +584,50 @@ function renderRestInto(el) {
   }
 }
 function renderRestAll() { $$(".rest-chip").forEach(renderRestInto); }
+
+// ---- Overlay a pantalla completa con números inmensos ----
+function restOverlayText(rem) {
+  return rem === 0 ? "¡Listo!" : String(rem);
+}
+function showRestOverlay() {
+  if (restOverlay) return;
+  const ov = document.createElement("div");
+  ov.className = "rest-overlay";
+  ov.innerHTML = `<div class="rest-overlay-num">${restOverlayText(restRemaining() ?? REST.total)}</div>
+    <div class="rest-overlay-hint">Tocá para minimizar</div>`;
+  ov.addEventListener("click", dismissRestOverlay);
+  document.body.appendChild(ov);
+  restOverlay = ov;
+  requestAnimationFrame(() => ov.classList.add("show")); // fade in
+}
+function updateRestOverlay() {
+  if (!restOverlay) return;
+  const rem = restRemaining();
+  if (rem === null) { dismissRestOverlay(); return; }
+  restOverlay.querySelector(".rest-overlay-num").textContent = restOverlayText(rem);
+  if (rem === 0) restOverlay.classList.add("done");
+}
+function dismissRestOverlay() {
+  if (!restOverlay) return;
+  const ov = restOverlay;
+  restOverlay = null;
+  ov.classList.remove("show"); // fade out (número + overlay)
+  ov.addEventListener("transitionend", () => ov.remove(), { once: true });
+  setTimeout(() => { if (ov.parentNode) ov.remove(); }, 600); // respaldo
+}
+
 function startRest() {
   ensureAudio();
   REST.endAt = performance.now() + REST.total * 1000;
   REST.alarmed = false;
   if (!REST.tick) REST.tick = setInterval(tickRest, 200);
+  showRestOverlay();
   renderRestAll();
 }
 function stopRest() {
   REST.endAt = null; REST.alarmed = false;
   if (REST.tick) { clearInterval(REST.tick); REST.tick = null; }
+  dismissRestOverlay();
   renderRestAll();
 }
 function tickRest() {
@@ -603,6 +638,7 @@ function tickRest() {
     if (REST.tick) { clearInterval(REST.tick); REST.tick = null; } // ya no hace falta seguir
     setTimeout(() => { if (REST.alarmed) stopRest(); }, 4000);     // vuelve a "Descanso" solo
   }
+  updateRestOverlay();
   renderRestAll();
 }
 
