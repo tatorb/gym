@@ -524,7 +524,45 @@ function renderExercises() {
     card.appendChild(buildExerciseCard(ex, i));
     track.appendChild(card);
   });
+  // Paso final: "Finalizar día"
+  const fin = document.createElement("div");
+  fin.className = "exercise-card finish-card";
+  fin.dataset.index = exercises.length;
+  fin.innerHTML = `<div id="finish-slot"></div>`;
+  track.appendChild(fin);
+  renderFinishCard();
   renderRestAll();
+}
+
+// Paso final del carrusel: checklist de lo cargado + botón "Finalizar día".
+function renderFinishCard() {
+  const slot = document.getElementById("finish-slot");
+  if (!slot) return;
+  const fecha = hoyISO();
+  const hechos = new Set(
+    DB.all()
+      .filter(r => r.usuario === currentUser && r.dia === currentDay.id && r.fecha === fecha)
+      .map(r => r.ejercicio)
+  );
+  const total = exercises.length;
+  const done = exercises.filter(ex => hechos.has(ex.id)).length;
+  const allDone = total > 0 && done === total;
+  const list = exercises.map(ex => {
+    const ok = hechos.has(ex.id);
+    return `<div class="finish-row ${ok ? "ok" : "pending"}">
+      <span class="finish-check">${ok ? "✓" : "○"}</span>
+      <span class="finish-name">${ex.nombre}</span>
+    </div>`;
+  }).join("");
+  slot.innerHTML = `
+    <div class="finish-head">
+      <div class="finish-title">${allDone ? "¡Completaste el día!" : "Terminar entrenamiento"}</div>
+      <div class="finish-sub">${done} de ${total} ejercicios cargados</div>
+    </div>
+    <div class="finish-list">${list}</div>
+    <button class="btn-primary" id="btn-finish">Finalizar día${allDone ? " 🎉" : ""}</button>
+    ${allDone ? "" : `<div class="finish-note">Podés finalizar igual: los que falten quedan como “sin cargar”.</div>`}`;
+  slot.querySelector("#btn-finish").addEventListener("click", showSummary);
 }
 
 // ==================== TIMER DE DESCANSO ====================
@@ -823,6 +861,7 @@ function readForm(index) {
 
 // ¿Hay datos escritos y sin guardar en este ejercicio?
 function isDirty(index) {
+  if (index < 0 || index >= exercises.length) return false; // paso "Finalizar": no es ejercicio
   const f = readForm(index);
   return f.val !== "" || f.val2 !== "" || f.reps !== "" || f.rir !== "" || f.nota !== "";
 }
@@ -873,11 +912,9 @@ async function saveExercise(index) {
   btn.classList.add("saved");
   setTimeout(() => { btn.textContent = "Guardar"; btn.classList.remove("saved"); }, 1600);
 
-  if (index === exercises.length - 1) {
-    setTimeout(() => showSummary(), 700);
-  } else {
-    setTimeout(() => scrollToIndex(index + 1, true), 700);
-  }
+  // Siempre avanzamos al siguiente paso. Después del último ejercicio viene
+  // el paso "Finalizar día" (no se festeja solo por guardar el último).
+  setTimeout(() => scrollToIndex(index + 1, true), 700);
 }
 
 // Popup al intentar salir de un ejercicio con datos sin guardar.
@@ -946,7 +983,7 @@ function openSavePrompt(index, proceed) {
 
 // Navega a un ejercicio, pidiendo guardar si el actual tiene datos sin guardar.
 function guardedGoTo(target) {
-  target = Math.max(0, Math.min(exercises.length - 1, target));
+  target = Math.max(0, Math.min(exercises.length, target)); // +1 por el paso "Finalizar"
   if (target === currentIndex) return;
   if (isDirty(currentIndex)) openSavePrompt(currentIndex, () => scrollToIndex(target, true));
   else scrollToIndex(target, true);
@@ -963,6 +1000,13 @@ function renderDots() {
     d.addEventListener("click", () => guardedGoTo(i));
     dots.appendChild(d);
   });
+  // Punto del paso "Finalizar día"
+  const fin = document.createElement("div");
+  const finIdx = exercises.length;
+  fin.className = "dot dot-finish" + (finIdx === currentIndex ? " active" : "");
+  fin.dataset.index = finIdx;
+  fin.addEventListener("click", () => guardedGoTo(finIdx));
+  dots.appendChild(fin);
   updateArrows();
 }
 function markDotDone(index) {
@@ -975,14 +1019,15 @@ function updateDots() {
 }
 function updateArrows() {
   $("#arrow-prev").disabled = currentIndex === 0;
-  $("#arrow-next").disabled = currentIndex === exercises.length - 1;
+  $("#arrow-next").disabled = currentIndex === exercises.length; // último = paso "Finalizar"
 }
 
 function scrollToIndex(i, smooth) {
-  i = Math.max(0, Math.min(exercises.length - 1, i));
+  i = Math.max(0, Math.min(exercises.length, i)); // +1 por el paso "Finalizar"
   const vp = $("#exercise-viewport");
   vp.scrollTo({ left: vp.clientWidth * i, behavior: smooth ? "smooth" : "auto" });
   currentIndex = i;
+  if (i === exercises.length) renderFinishCard(); // refresca el checklist al llegar
   updateDots();
 }
 
@@ -1012,6 +1057,7 @@ function onSwipeSettled() {
     openSavePrompt(from, () => scrollToIndex(settled, true));
   } else {
     currentIndex = settled;
+    if (settled === exercises.length) renderFinishCard(); // refresca el checklist
     updateDots();
   }
 }
@@ -1034,11 +1080,14 @@ function showSummary() {
     }
   });
 
+  const doneCount = exercises.filter(ex => porEjercicio[ex.id]).length;
+  const allDone = exercises.length > 0 && doneCount === exercises.length;
+
   const cont = $("#summary-content");
   const nombreUser = PLAN.usuarios[currentUser]?.nombre || currentUser;
-  let html = `<div class="sum-celebrate">🎉 ¡Sesión terminada!</div>
+  let html = `<div class="sum-celebrate">${allDone ? "🎉 ¡Sesión terminada!" : "✅ Día finalizado"}</div>
     <h2>${currentDay.nombre} · ${currentDay.subtitulo || ""}</h2>
-    <div class="sum-date">${nombreUser} · ${fechaCorta(fecha)}</div>`;
+    <div class="sum-date">${nombreUser} · ${fechaCorta(fecha)}${allDone ? "" : ` · ${doneCount} de ${exercises.length} cargados`}</div>`;
 
   exercises.forEach(ex => {
     const r = porEjercicio[ex.id];
@@ -1067,7 +1116,7 @@ function showSummary() {
   const mb = $("#sum-metrics");
   if (mb) mb.addEventListener("click", openMetrics);
   showScreen("summary");
-  launchConfetti();
+  if (allDone) launchConfetti(); // festejo solo si cargaste todos
 }
 
 function renderSummaryProgress(fecha, porEjercicio) {

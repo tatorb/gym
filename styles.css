@@ -200,6 +200,33 @@ body[data-user] {
   padding: 14px 18px calc(24px + var(--safe-bottom));
 }
 
+/* Paso final "Finalizar día" */
+.finish-card { display: flex; flex-direction: column; justify-content: center; }
+#finish-slot { display: flex; flex-direction: column; justify-content: center; min-height: 100%; }
+.finish-head { text-align: center; margin-bottom: 20px; }
+.finish-title { font-size: 25px; font-weight: 800; letter-spacing: -0.3px; }
+.finish-sub { color: var(--text-dim); font-size: 15px; margin-top: 4px; }
+.finish-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+.finish-row {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid transparent; background: var(--fill-card);
+  border-radius: 14px; padding: 13px 15px;
+}
+.finish-check {
+  flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.finish-row.ok .finish-check { background: var(--accent); color: var(--accent-fg); }
+.finish-row.ok .finish-name { color: var(--text); }
+.finish-row.pending .finish-check { border: 1.5px solid var(--text-faint); color: var(--text-faint); }
+.finish-row.pending .finish-name { color: var(--text-dim); }
+.finish-name { font-weight: 700; font-size: 16px; }
+.finish-note { text-align: center; color: var(--text-faint); font-size: 13px; margin-top: 14px; line-height: 1.5; }
+/* Punto del carrusel para el paso final */
+.dot.dot-finish { width: 12px; height: 12px; border-radius: 4px; }
+.dot.dot-finish.active { width: 26px; border-radius: 5px; }
+
 /* Encabezado del ejercicio: bloque sólido invertido (autoridad en clave MRB) */
 .ex-top {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
