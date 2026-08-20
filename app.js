@@ -900,6 +900,21 @@ async function commitLoad(index, f) {
   renderStatusBar();
 }
 
+// Ejercicios ya cargados hoy por el usuario actual en este día.
+function doneSetToday() {
+  const fecha = hoyISO();
+  return new Set(
+    DB.all()
+      .filter(r => r.usuario === currentUser && r.dia === currentDay.id && r.fecha === fecha)
+      .map(r => r.ejercicio)
+  );
+}
+// ¿Están TODOS los ejercicios del día completados? (sin importar el orden)
+function allExercisesDone() {
+  const hechos = doneSetToday();
+  return exercises.length > 0 && exercises.every(ex => hechos.has(ex.id));
+}
+
 async function saveExercise(index) {
   const f = readForm(index);
   const err = validateForm(f);
@@ -912,9 +927,12 @@ async function saveExercise(index) {
   btn.classList.add("saved");
   setTimeout(() => { btn.textContent = "Guardar"; btn.classList.remove("saved"); }, 1600);
 
-  // Siempre avanzamos al siguiente paso. Después del último ejercicio viene
-  // el paso "Finalizar día" (no se festeja solo por guardar el último).
-  setTimeout(() => scrollToIndex(index + 1, true), 700);
+  setTimeout(() => {
+    // Si con esta carga quedaron TODOS completos (en cualquier orden), festejamos.
+    // Si falta alguno, avanzamos al siguiente paso (tras el último viene "Finalizar día").
+    if (allExercisesDone()) showSummary();
+    else scrollToIndex(index + 1, true);
+  }, 700);
 }
 
 // Popup al intentar salir de un ejercicio con datos sin guardar.
