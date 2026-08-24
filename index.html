@@ -18,6 +18,43 @@
   <!-- Barra superior de estado (conexión / cargas pendientes) -->
   <div id="statusBar" class="status-bar hidden"></div>
 
+  <!-- ====================== LOGIN (mail + contraseña) ====================== -->
+  <section id="screen-login" class="screen">
+    <div class="auth-wrap">
+      <h1 class="app-title">Entrenamiento</h1>
+      <p class="app-sub">Iniciá sesión</p>
+      <form id="login-form" class="auth-form">
+        <label class="auth-label">Mail
+          <input id="login-email" type="email" inputmode="email" autocomplete="username" required placeholder="tu@mail.com" />
+        </label>
+        <label class="auth-label">Contraseña
+          <input id="login-pass" type="password" autocomplete="current-password" required placeholder="Tu contraseña" />
+        </label>
+        <div id="login-error" class="auth-error hidden"></div>
+        <button type="submit" class="btn-primary" id="login-submit">Entrar</button>
+      </form>
+      <button class="auth-link" id="login-forgot" type="button">¿Olvidaste tu contraseña?</button>
+    </div>
+  </section>
+
+  <!-- ====================== CREAR / CAMBIAR CONTRASEÑA ====================== -->
+  <section id="screen-setpass" class="screen">
+    <div class="auth-wrap">
+      <h1 class="app-title">Tu contraseña</h1>
+      <p class="app-sub" id="setpass-sub">Creá tu contraseña para entrar</p>
+      <form id="setpass-form" class="auth-form">
+        <label class="auth-label">Nueva contraseña
+          <input id="setpass-p1" type="password" autocomplete="new-password" required minlength="6" placeholder="Mínimo 6 caracteres" />
+        </label>
+        <label class="auth-label">Repetir contraseña
+          <input id="setpass-p2" type="password" autocomplete="new-password" required minlength="6" placeholder="Repetí la contraseña" />
+        </label>
+        <div id="setpass-error" class="auth-error hidden"></div>
+        <button type="submit" class="btn-primary" id="setpass-submit">Guardar y entrar</button>
+      </form>
+    </div>
+  </section>
+
   <!-- ====================== PANTALLA 1: ELEGIR USUARIO ====================== -->
   <section id="screen-user" class="screen active">
     <div class="user-picker">
@@ -33,7 +70,7 @@
   <!-- ====================== PANTALLA 2: MENÚ DE DÍAS ====================== -->
   <section id="screen-days" class="screen">
     <header class="topbar">
-      <button class="icon-btn" data-goto="user" aria-label="Cambiar usuario">‹</button>
+      <button class="icon-btn" id="btn-days-back" data-goto="user" aria-label="Cambiar usuario">‹</button>
       <div class="topbar-title">
         <span id="days-user-name">—</span>
       </div>
@@ -41,6 +78,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 16v-5M13 16V9M18 16V7"/></svg>
       </button>
       <button class="icon-btn" id="btn-export" aria-label="Exportar respaldo" title="Exportar respaldo">⤓</button>
+      <button class="icon-btn hidden" id="btn-logout" aria-label="Cerrar sesión" title="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
     </header>
     <div class="greeting">
       <div class="greeting-avatar" id="greeting-avatar">T</div>

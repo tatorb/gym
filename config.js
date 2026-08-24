@@ -19,4 +19,10 @@ window.CONFIG = {
 
   // 2) La clave pública (publishable). Segura de compartir.
   SUPABASE_ANON_KEY: "sb_publishable_OdS_gWXbYaipCYivK3rY9w_RbdmYNos",
+
+  // 3) Sistema de usuarios (login con mail + contraseña).
+  //    Dejalo en false hasta terminar los pasos de Supabase del README
+  //    (crear los usuarios, correr supabase_auth_setup.sql y configurar
+  //    la URL del sitio). Cuando esté todo listo, ponelo en true.
+  AUTH_ENABLED: false,
 };

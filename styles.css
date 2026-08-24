@@ -117,6 +117,29 @@ body[data-user] {
 .btn-user[data-user="tato"] { background: #5B7382; color: #FFFFFF; border-color: transparent; }
 .btn-user[data-user="gabi"] { background: #f4d7e1; color: #0c0c0d; border-color: transparent; }
 
+/* ===================== LOGIN / CONTRASEÑA ===================== */
+.auth-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  padding: 24px; gap: 6px;
+}
+.auth-form {
+  display: flex; flex-direction: column; gap: 14px;
+  width: 100%; max-width: 400px; margin-top: 24px; text-align: left;
+}
+.auth-label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: var(--text-dim); }
+.auth-form input {
+  background: #EAEAEC; border: 1px solid rgba(0,0,0,0.16); color: #141416;
+  border-radius: 14px; padding: 15px 16px; font-size: 16px; font-weight: 600;
+  outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.18);
+}
+.auth-form input::placeholder { color: #86868B; }
+.auth-form input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), inset 0 1px 2px rgba(0,0,0,0.12); }
+.auth-form .btn-primary { margin-top: 6px; }
+.auth-error { font-size: 14px; color: var(--danger); font-weight: 600; text-align: center; }
+.auth-error.ok { color: var(--ok); }
+.auth-link { background: none; border: none; color: var(--text-dim); font-size: 14px; font-weight: 600; margin-top: 18px; text-decoration: underline; padding: 8px; }
+
 /* ===================== BARRA SUPERIOR (topbar) ===================== */
 .topbar {
   display: flex; align-items: center; gap: 8px;

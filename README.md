@@ -261,3 +261,57 @@ El plan vive en **`plan.json`**. Lo podés editar a mano en GitHub:
   la app. La PWA a veces guarda una copia; volver a abrirla la refresca.
 - **Quiero empezar el historial de cero:** en Supabase, Table Editor → `registros`
   → seleccionás las filas y las borrás. (Guardá antes un respaldo con ⤓.)
+
+---
+
+## 🔐 Activar el login por usuario (mail + contraseña)
+
+Por defecto la app entra eligiendo Tato o Gabi, sin contraseña. Si querés que
+cada persona entre con su **mail y su contraseña** (y que cada una vea **solo sus
+datos**), seguí estos pasos. Mientras no los hagas, no cambia nada: la app sigue
+funcionando como antes.
+
+**Tato queda como administrador** (puede ver a los dos). Gabi ve solo lo suyo.
+
+### Pasos en Supabase (una sola vez)
+
+1. **Activar el mail como método de acceso.**
+   Panel de Supabase → **Authentication** → **Providers** → **Email**: que esté
+   activado. Dejá **"Confirm email"** en ON.
+
+2. **Decir cuál es la dirección de tu app.**
+   **Authentication** → **URL Configuration**:
+   - En **Site URL** poné la dirección de tu app (la de GitHub Pages, por ejemplo
+     `https://TU-USUARIO.github.io/gym/`).
+   - En **Redirect URLs** agregá esa misma dirección.
+   (Esto hace que los links de invitación/recuperación vuelvan a tu app.)
+
+3. **Crear los dos usuarios.**
+   **Authentication** → **Users** → botón **Add user** (o **Invite**):
+   - `mrodriguezrusco@gmail.com` (Tato, administrador)
+   - `arqgabrielabordabossana@hotmail.com` (Gabi)
+   Si usás **Invite user**, a cada uno le llega un mail para **crear su contraseña**
+   la primera vez (que es justo lo que queríamos).
+
+4. **Enlazar los usuarios con sus perfiles.**
+   **SQL Editor** → **New query** → pegá TODO el archivo **`supabase_auth_setup.sql`**
+   → **Run**. (Se puede correr las veces que quieras.)
+
+5. **Encender el login en la app.**
+   En **`config.js`** cambiá `AUTH_ENABLED: false` por `AUTH_ENABLED: true`
+   (Commit changes). En 1–2 minutos la app pide login.
+
+6. **Probar** que Tato y Gabi entran con su contraseña y ven sus datos.
+   El historial de antes se conserva (no se borra nada).
+
+7. **(Recomendado) Cerrar el acceso anónimo.**
+   Cuando el login ya funciona bien, volvé al **SQL Editor** y corré las 4 líneas
+   del **"PASO FINAL"** que están al final de `supabase_auth_setup.sql`
+   (destapalas quitando los `--`). Desde ahí, solo se entra con login.
+
+### Cómo se invita a alguien nuevo (por ahora)
+
+Desde **Authentication → Users → Invite user** en Supabase (le llega el mail para
+poner contraseña). Después, en el **SQL Editor**, corré de nuevo `supabase_auth_setup.sql`
+—o agregá una fila en la tabla `perfiles` con su `slug`— para enlazarlo.
+Más adelante podemos sumar un botón de "invitar" dentro de la app.

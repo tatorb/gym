@@ -8,6 +8,14 @@ let currentUser = null;     // 'tato' | 'gabi'
 let currentDay = null;      // objeto del día
 let exercises = [];         // ejercicios resueltos del día para el usuario
 let currentIndex = 0;
+let PROFILE = null;         // perfil del usuario logueado (si hay login)
+
+// Tipo de link de auth con el que se abrió la app (invitación / recuperación).
+// Se lee ANTES de que Supabase consuma el hash de la URL.
+const AUTH_HASH = (() => {
+  const m = (window.location.hash || "").match(/[#&]type=([a-z_]+)/i);
+  return m ? m[1].toLowerCase() : null;
+})();
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -467,6 +475,9 @@ function openDay(dia) {
 function renderUserSwitch() {
   const el = $("#user-switch");
   el.innerHTML = "";
+  // Con login, solo el admin puede cambiar de persona.
+  if (PROFILE && !PROFILE.es_admin) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
   Object.keys(PLAN.usuarios).forEach(u => {
     const b = document.createElement("button");
     b.type = "button";
@@ -1550,6 +1561,129 @@ $("#btn-metrics").addEventListener("click", openMetrics);
 $$("#metrics-tabs button").forEach(b => b.addEventListener("click", () => { metricsTab = b.dataset.tab; renderMetrics(); }));
 $$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
 
+// ================== AUTENTICACIÓN (login por usuario) ==================
+function authMsg(sel, msg, ok) {
+  const el = $(sel);
+  el.textContent = msg;
+  el.classList.remove("hidden");
+  el.classList.toggle("ok", !!ok);
+}
+function authBusy(sel, busy, labelBusy) {
+  const b = $(sel);
+  if (busy && !b.dataset.idle) b.dataset.idle = b.textContent;
+  b.disabled = busy;
+  b.textContent = busy ? labelBusy : (b.dataset.idle || b.textContent);
+  if (!busy) delete b.dataset.idle;
+}
+function showLogin(msg) {
+  showScreen("login");
+  if (msg) authMsg("#login-error", msg); else $("#login-error").classList.add("hidden");
+}
+
+// Entra a la app ya con sesión, según el rol del perfil.
+function enterAuthedApp(profile) {
+  PROFILE = profile;
+  $("#btn-logout").classList.remove("hidden");
+  if (profile.es_admin) {
+    // Admin: puede ver a los dos → mantiene el selector de persona.
+    $("#btn-days-back").classList.remove("hidden");
+    const last = DB.getLastUser();
+    if (last && PLAN.usuarios[last]) { document.body.dataset.user = last; selectUser(last); }
+    else showScreen("user");
+  } else {
+    // Usuario normal: directo a SUS días, sin selector ni cambio de persona.
+    $("#btn-days-back").classList.add("hidden");
+    if (!profile.slug || !PLAN.usuarios[profile.slug]) {
+      showLogin("Tu usuario no está enlazado a un perfil del plan. Avisale al administrador.");
+      return;
+    }
+    selectUser(profile.slug);
+  }
+}
+
+function wireAuthUI() {
+  $("#login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    authBusy("#login-submit", true, "Entrando…");
+    const res = await DB.signIn($("#login-email").value, $("#login-pass").value);
+    authBusy("#login-submit", false);
+    if (res.error) { authMsg("#login-error", res.error); return; }
+    if (res.profile?.sinPerfil) {
+      await DB.signOut();
+      authMsg("#login-error", "Tu usuario todavía no tiene perfil asignado. Avisale al administrador.");
+      return;
+    }
+    $("#login-pass").value = "";
+    enterAuthedApp(res.profile);
+  });
+
+  $("#login-forgot").addEventListener("click", async () => {
+    const email = $("#login-email").value.trim();
+    if (!email) { authMsg("#login-error", "Escribí tu mail arriba y volvé a tocar el enlace."); return; }
+    const res = await DB.sendRecovery(email);
+    if (res.error) { authMsg("#login-error", res.error); return; }
+    authMsg("#login-error", "Te enviamos un mail para recuperar tu contraseña.", true);
+  });
+
+  $("#setpass-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const p1 = $("#setpass-p1").value, p2 = $("#setpass-p2").value;
+    if (p1.length < 6) { authMsg("#setpass-error", "La contraseña debe tener al menos 6 caracteres."); return; }
+    if (p1 !== p2) { authMsg("#setpass-error", "Las dos contraseñas no coinciden."); return; }
+    authBusy("#setpass-submit", true, "Guardando…");
+    const res = await DB.updatePassword(p1);
+    authBusy("#setpass-submit", false);
+    if (res.error) { authMsg("#setpass-error", res.error); return; }
+    history.replaceState(null, "", window.location.pathname + window.location.search); // limpia el hash del link
+    if (res.profile?.sinPerfil) {
+      authMsg("#setpass-error", "Contraseña guardada, pero tu usuario no tiene perfil. Avisale al administrador.");
+      return;
+    }
+    enterAuthedApp(res.profile);
+  });
+
+  $("#btn-logout").addEventListener("click", async () => {
+    if (!confirm("¿Cerrar sesión?")) return;
+    await DB.signOut();
+    PROFILE = null;
+    document.body.removeAttribute("data-user");
+    $("#btn-logout").classList.add("hidden");
+    showLogin();
+  });
+}
+
+async function initAuthFlow() {
+  wireAuthUI();
+  // Si llega un evento de recuperación, mostramos "poner contraseña".
+  DB.onAuth((event) => { if (event === "PASSWORD_RECOVERY") showScreen("setpass"); });
+
+  const { session, profile } = await DB.initAuth();
+
+  // ¿Viene de un link de invitación / recuperación por mail?
+  if (AUTH_HASH === "invite" || AUTH_HASH === "signup" || AUTH_HASH === "recovery") {
+    $("#setpass-sub").textContent = AUTH_HASH === "recovery"
+      ? "Elegí una nueva contraseña" : "Creá tu contraseña para entrar";
+    showScreen("setpass");
+    return;
+  }
+
+  if (session && profile && !profile.sinPerfil) {
+    enterAuthedApp(profile);
+  } else if (session && profile && profile.sinPerfil) {
+    await DB.signOut();
+    showLogin("Tu usuario todavía no tiene perfil asignado. Avisale al administrador.");
+  } else {
+    showLogin();
+  }
+}
+
+// Arranque sin login (comportamiento anterior: elegir Tato/Gabi).
+function bootNoAuth() {
+  const last = DB.getLastUser();
+  if (last && PLAN.usuarios[last]) { document.body.dataset.user = last; selectUser(last); }
+  else showScreen("user");
+}
+
 // ---------------- Arranque ----------------
 async function init() {
   try {
@@ -1562,17 +1696,10 @@ async function init() {
 
   renderStatusBar();
 
-  const last = DB.getLastUser();
-  if (last && PLAN.usuarios[last]) {
-    // Recuerda el último usuario, pero igual mostramos la pantalla inicial
-    // con ese usuario ya resaltado por si querés cambiar.
-    document.body.dataset.user = last;
-  }
-  // Si hay un último usuario, entramos directo a sus días.
-  if (last && PLAN.usuarios[last]) {
-    selectUser(last);
+  if (DB.authEnabled()) {
+    await initAuthFlow();
   } else {
-    showScreen("user");
+    bootNoAuth();
   }
 }
 

@@ -12,6 +12,8 @@ const LS_RECORDS = "gym_records";  // vista local de los registros
 const LS_OUTBOX  = "gym_outbox";   // cambios pendientes de enviar a Supabase
 const LS_USER    = "gym_last_user";
 const LS_VIDEOS  = "gym_video_overrides"; // links de video editados desde la app
+const LS_PROFILE = "gym_profile";  // perfil del usuario logueado (slug, admin, mail)
+const LS_OWNER   = "gym_owner_slug"; // de quién es la copia local (para no mezclar datos)
 
 function load(key, fallback) {
   try {
@@ -51,6 +53,7 @@ const isConfigured = () =>
   cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY &&
   !cfg.SUPABASE_URL.startsWith("PEGA_") &&
   !cfg.SUPABASE_ANON_KEY.startsWith("PEGA_");
+const authEnabled = () => isConfigured() && cfg.AUTH_ENABLED === true;
 
 async function getClient() {
   if (client) return client;
@@ -58,12 +61,38 @@ async function getClient() {
   try {
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
     client = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
-      auth: { persistSession: false },
+      auth: authEnabled()
+        ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        : { persistSession: false },
     });
     return client;
   } catch (e) {
     return null; // sin internet o CDN no disponible: seguimos en modo local
   }
+}
+
+// Traduce los errores de login de Supabase a algo entendible.
+function traducirAuth(error) {
+  const m = (error?.message || "").toLowerCase();
+  if (m.includes("invalid login")) return "Mail o contraseña incorrectos.";
+  if (m.includes("email not confirmed")) return "Todavía no confirmaste tu mail.";
+  if (m.includes("password should be at least")) return "La contraseña es muy corta (mínimo 6 caracteres).";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Esperá un momento.";
+  if (m.includes("user already registered")) return "Ese mail ya tiene cuenta.";
+  return error?.message || "No se pudo completar. Probá de nuevo.";
+}
+
+// Si cambia el dueño de la copia local (y no es admin), limpiamos para no
+// mezclar el historial de una persona con el de otra en el mismo teléfono.
+function handleOwnerChange(slug, isAdmin) {
+  const key = isAdmin ? "admin" : slug;
+  const prev = load(LS_OWNER, null);
+  if (prev && prev !== key && !isAdmin) {
+    records = [];
+    outbox = [];
+    persist();
+  }
+  store(LS_OWNER, key);
 }
 
 function persist() { store(LS_RECORDS, records); store(LS_OUTBOX, outbox); }
@@ -105,6 +134,74 @@ function reapplyOutbox(serverRows) {
 export const DB = {
   onStatus(cb) { statusCb = cb; },
   configured: isConfigured,
+  authEnabled,
+
+  // ---- Autenticación (login con mail + contraseña) ----
+  getProfile() { return load(LS_PROFILE, null); },
+
+  async initAuth() {
+    // Devuelve el estado inicial de sesión: { session, profile }.
+    const c = await getClient();
+    if (!c) return { session: null, profile: this.getProfile() };
+    const { data: { session } } = await c.auth.getSession();
+    if (!session) { store(LS_PROFILE, null); return { session: null, profile: null }; }
+    const profile = await this.loadProfile();
+    return { session, profile };
+  },
+
+  onAuth(cb) {
+    getClient().then(c => { if (c) c.auth.onAuthStateChange((event, session) => cb(event, session)); });
+  },
+
+  async signIn(email, password) {
+    const c = await getClient();
+    if (!c) return { error: "Sin conexión. Entrá con internet la primera vez." };
+    const { error } = await c.auth.signInWithPassword({ email: (email || "").trim(), password });
+    if (error) return { error: traducirAuth(error) };
+    const profile = await this.loadProfile();
+    return { ok: true, profile };
+  },
+
+  async updatePassword(password) {
+    const c = await getClient();
+    if (!c) return { error: "Sin conexión." };
+    const { error } = await c.auth.updateUser({ password });
+    if (error) return { error: traducirAuth(error) };
+    const profile = await this.loadProfile();
+    return { ok: true, profile };
+  },
+
+  async sendRecovery(email) {
+    const c = await getClient();
+    if (!c) return { error: "Sin conexión." };
+    const redirectTo = window.location.origin + window.location.pathname;
+    const { error } = await c.auth.resetPasswordForEmail((email || "").trim(), { redirectTo });
+    if (error) return { error: traducirAuth(error) };
+    return { ok: true };
+  },
+
+  async signOut() {
+    const c = await getClient();
+    if (c) { try { await c.auth.signOut(); } catch {} }
+    store(LS_PROFILE, null);
+  },
+
+  async loadProfile() {
+    const c = await getClient();
+    if (!c) return this.getProfile();
+    const { data: { user } } = await c.auth.getUser();
+    if (!user) { store(LS_PROFILE, null); return null; }
+    const { data, error } = await c
+      .from("perfiles").select("slug, es_admin, email").eq("id", user.id).maybeSingle();
+    if (error || !data) {
+      const p = { slug: null, es_admin: false, email: user.email, sinPerfil: true };
+      store(LS_PROFILE, p); return p;
+    }
+    const p = { slug: data.slug, es_admin: !!data.es_admin, email: data.email || user.email };
+    store(LS_PROFILE, p);
+    handleOwnerChange(p.slug, p.es_admin);
+    return p;
+  },
 
   getLastUser() { return load(LS_USER, null); },
   setLastUser(u) { store(LS_USER, u); },
