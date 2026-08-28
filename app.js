@@ -1525,19 +1525,66 @@ function launchConfetti() {
 }
 
 // ---------------- Exportar respaldo ----------------
-function exportBackup() {
-  const data = DB.exportData();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+function descargarArchivo(contenido, nombre, tipo) {
+  const blob = new Blob([contenido], { type: tipo });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const fecha = hoyISO();
   a.href = url;
-  a.download = `respaldo-gym-${fecha}.json`;
+  a.download = nombre;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportBackup() {
+  const data = DB.exportData();
+  descargarArchivo(JSON.stringify(data, null, 2), `respaldo-gym-${hoyISO()}.json`, "application/json");
   toast("Respaldo descargado 📁");
+}
+
+// Escapa un valor para CSV (comillas, comas, saltos de línea).
+function csvCampo(v) {
+  const s = String(v ?? "");
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+// Descarga el historial completo (cada carga con su fecha y todos sus datos).
+function exportHistoryCSV() {
+  const all = DB.all();
+  if (!all.length) { toast("Todavía no hay historial cargado."); return; }
+  const nombreUser = u => PLAN.usuarios[u]?.nombre || u;
+  const nombreDia = d => PLAN.dias.find(x => x.id === d)?.nombre || d;
+  const orden = all.slice().sort((a, b) => {
+    if (a.usuario !== b.usuario) return a.usuario < b.usuario ? -1 : 1;
+    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+    return (a.created_at || "") < (b.created_at || "") ? 1 : -1;
+  });
+  const headers = ["usuario","fecha","dia","dia_nombre","ejercicio_id","ejercicio","medida","valor","valor2","reps","rir","nota","guardado"];
+  const filas = orden.map(r => [
+    nombreUser(r.usuario), r.fecha, r.dia, nombreDia(r.dia),
+    r.ejercicio, r.ejercicio_nombre || "", r.medida || "kg",
+    r.kg ?? "", r.kg2 ?? "", r.reps ?? "", r.rir ?? "", r.nota || "", r.created_at || "",
+  ].map(csvCampo).join(","));
+  const csv = "﻿" + [headers.join(","), ...filas].join("\r\n") + "\r\n"; // BOM para Excel
+  descargarArchivo(csv, `historial-gym-${hoyISO()}.csv`, "text/csv;charset=utf-8");
+  toast(`Historial descargado (${all.length} cargas) 📁`);
+}
+
+// Menú del botón ⤓: elegir qué descargar.
+function openExportMenu() {
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>Descargar</h3>
+      <div class="modal-sub">Elegí qué querés bajar</div>
+      <button class="btn-primary" id="exp-csv">Historial (CSV)</button>
+      <div class="modal-row">
+        <button class="btn-ghost" id="exp-json">Respaldo (JSON)</button>
+        <button class="btn-ghost" data-close>Cerrar</button>
+      </div>
+    </div>`);
+  o.querySelector("#exp-csv").addEventListener("click", () => { o.remove(); exportHistoryCSV(); });
+  o.querySelector("#exp-json").addEventListener("click", () => { o.remove(); exportBackup(); });
 }
 
 // ---------------- Botones de navegación generales ----------------
@@ -1556,7 +1603,7 @@ $$("[data-goto]").forEach(btn => {
     doGoto(target);
   });
 });
-$("#btn-export").addEventListener("click", exportBackup);
+$("#btn-export").addEventListener("click", openExportMenu);
 $("#btn-metrics").addEventListener("click", openMetrics);
 $$("#metrics-tabs button").forEach(b => b.addEventListener("click", () => { metricsTab = b.dataset.tab; renderMetrics(); }));
 $$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
