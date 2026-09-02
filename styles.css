@@ -231,20 +231,36 @@ body[data-user] {
 .finish-sub { color: var(--text-dim); font-size: 15px; margin-top: 4px; }
 .finish-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
 .finish-row {
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
   display: flex; align-items: center; gap: 12px;
-  border: 1px solid transparent; background: var(--fill-card);
+  border: 1px solid transparent;
   border-radius: 14px; padding: 13px 15px;
+  transition: transform .1s ease;
 }
+.finish-row:active { transform: scale(0.99); }
 .finish-check {
   flex: 0 0 24px; width: 24px; height: 24px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 800;
 }
-.finish-row.ok .finish-check { background: var(--accent); color: var(--accent-fg); }
-.finish-row.ok .finish-name { color: var(--text); }
-.finish-row.pending .finish-check { border: 1.5px solid var(--text-faint); color: var(--text-faint); }
-.finish-row.pending .finish-name { color: var(--text-dim); }
-.finish-name { font-weight: 700; font-size: 16px; }
+.finish-name { flex: 1; min-width: 0; font-weight: 700; font-size: 16px; }
+.finish-when { flex: 0 0 auto; font-size: 13px; font-weight: 700; }
+/* Hecho = fondo verde */
+.finish-row.ok {
+  background: rgba(74,163,110,0.16);
+  box-shadow: inset 0 0 0 1px rgba(74,163,110,0.45);
+}
+.finish-row.ok .finish-check { background: #4aa36e; color: #06140c; }
+.finish-row.ok .finish-name { color: #dcf1e5; }
+.finish-row.ok .finish-when { color: #83d3a3; }
+/* Falta = fondo rojo */
+.finish-row.pending {
+  background: rgba(201,115,111,0.16);
+  box-shadow: inset 0 0 0 1px rgba(201,115,111,0.5);
+}
+.finish-row.pending .finish-check { background: #c9736f; color: #1a0c0b; }
+.finish-row.pending .finish-name { color: #f2d4d2; }
+.finish-row.pending .finish-when { color: #e2a4a0; }
 .finish-note { text-align: center; color: var(--text-faint); font-size: 13px; margin-top: 14px; line-height: 1.5; }
 /* Punto del carrusel para el paso final */
 .dot.dot-finish { width: 12px; height: 12px; border-radius: 4px; }

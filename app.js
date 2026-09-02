@@ -558,12 +558,15 @@ function renderFinishCard() {
   const total = exercises.length;
   const done = exercises.filter(ex => hechos.has(ex.id)).length;
   const allDone = total > 0 && done === total;
-  const list = exercises.map(ex => {
+  const list = exercises.map((ex, i) => {
     const ok = hechos.has(ex.id);
-    return `<div class="finish-row ${ok ? "ok" : "pending"}">
-      <span class="finish-check">${ok ? "✓" : "○"}</span>
+    const ultima = DB.history(currentUser, ex.id)[0]?.fecha || null;
+    const cuando = ok ? "hoy" : (ultima ? fechaCorta(ultima) : "sin registro");
+    return `<button type="button" class="finish-row ${ok ? "ok" : "pending"}" data-goto-ex="${i}">
+      <span class="finish-check">${ok ? "✓" : "✗"}</span>
       <span class="finish-name">${ex.nombre}</span>
-    </div>`;
+      <span class="finish-when">${cuando}</span>
+    </button>`;
   }).join("");
   slot.innerHTML = `
     <div class="finish-head">
@@ -572,8 +575,12 @@ function renderFinishCard() {
     </div>
     <div class="finish-list">${list}</div>
     <button class="btn-primary" id="btn-finish">Finalizar día${allDone ? " 🎉" : ""}</button>
-    ${allDone ? "" : `<div class="finish-note">Podés finalizar igual: los que falten quedan como “sin cargar”.</div>`}`;
+    ${allDone ? "" : `<div class="finish-note">Tocá un ejercicio para ir a cargarlo. Podés finalizar igual: los que falten quedan como “sin cargar”.</div>`}`;
   slot.querySelector("#btn-finish").addEventListener("click", showSummary);
+  // Cada ejercicio es un link: lleva a su tarjeta en el carrusel.
+  slot.querySelectorAll("[data-goto-ex]").forEach(b =>
+    b.addEventListener("click", () => guardedGoTo(Number(b.dataset.gotoEx)))
+  );
 }
 
 // ==================== TIMER DE DESCANSO ====================
@@ -707,7 +714,7 @@ function refreshLastLine(index, ex, el) {
   if (!el) return;
   const last = DB.history(currentUser, ex.id)[0];
   el.innerHTML = last
-    ? `<span class="ex-last-k">Última</span><span class="ex-last-v">${formatRecord(last)}</span><span class="ex-last-m">Historial ›</span>`
+    ? `<span class="ex-last-k">${fechaCorta(last.fecha)}</span><span class="ex-last-v">${formatRecord(last)}</span><span class="ex-last-m">Historial ›</span>`
     : `<span class="ex-last-k">Sin registros</span><span class="ex-last-v"></span><span class="ex-last-m">Historial ›</span>`;
   el.onclick = () => openHistorial(ex, index);
 }
