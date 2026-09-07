@@ -713,8 +713,11 @@ function refreshLastLine(index, ex, el) {
   el = el || document.getElementById(`last-${index}`);
   if (!el) return;
   const last = DB.history(currentUser, ex.id)[0];
+  const ago = last ? daysAgoFrom(last.fecha) : null;
+  const esHoy = ago !== null && ago <= 0;
+  el.classList.toggle("today", esHoy); // verde si ya se hizo hoy
   el.innerHTML = last
-    ? `<span class="ex-last-k">${fechaCorta(last.fecha)}</span><span class="ex-last-v">${formatRecord(last)}</span><span class="ex-last-m">Historial ›</span>`
+    ? `<span class="ex-last-k">${fraseHace(ago)}</span><span class="ex-last-v">${formatRecord(last)}</span><span class="ex-last-m">Historial ›</span>`
     : `<span class="ex-last-k">Sin registros</span><span class="ex-last-v"></span><span class="ex-last-m">Historial ›</span>`;
   el.onclick = () => openHistorial(ex, index);
 }

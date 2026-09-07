@@ -305,6 +305,11 @@ body[data-user] {
 .ex-last-k { color: var(--text-faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; flex: 0 0 auto; }
 .ex-last-v { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ex-last-m { color: var(--text); font-size: 12px; font-weight: 700; flex: 0 0 auto; }
+/* Verde cuando el ejercicio ya se cargó hoy */
+.ex-last.today { background: rgba(74,163,110,0.16); box-shadow: inset 0 0 0 1px rgba(74,163,110,0.45); }
+.ex-last.today .ex-last-k { color: #83d3a3; }
+.ex-last.today .ex-last-v { color: #dcf1e5; }
+.ex-last.today .ex-last-m { color: #83d3a3; }
 
 .ex-cue { color: var(--text-dim); font-size: 14px; margin: 0; line-height: 1.55; }
 .tec-cue { color: var(--text); font-size: 15px; margin: 0 0 4px; line-height: 1.55; }
