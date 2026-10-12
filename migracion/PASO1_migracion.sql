@@ -31,7 +31,7 @@ insert into public.equivalencias (usuario, ejercicio_old, ejercicio_nuevo) value
   ('tato','d3_jalon_o_remo','jalon_prono'),
   ('tato','d3_press_pecho_maquina','press_pecho_maquina'),
   ('tato','d3_ab_wheel','ab_wheel'),
-  ('tato','d3_superserie_biceps_triceps','superserie_curl_triceps_extension'),
+  ('tato','d3_superserie_biceps_triceps','superserie_curl_triceps_mancuernas'),
   ('tato','d3_sexto','vuelos_posteriores'),
   ('gabi','d1_back_squat','back_squat'),
   ('gabi','d1_prensa','prensa'),
@@ -49,7 +49,7 @@ insert into public.equivalencias (usuario, ejercicio_old, ejercicio_nuevo) value
   ('gabi','d3_jalon_o_remo','jalon_prono'),
   ('gabi','d3_press_pecho_maquina','press_pecho_maquina'),
   ('gabi','d3_ab_wheel','ab_wheel'),
-  ('gabi','d3_superserie_biceps_triceps','superserie_curl_triceps_extension'),
+  ('gabi','d3_superserie_biceps_triceps','superserie_curl_triceps_mancuernas'),
   ('gabi','d3_sexto','frog_pump')
 on conflict (usuario, ejercicio_old) do update set ejercicio_nuevo = excluded.ejercicio_nuevo;
 

@@ -15,7 +15,7 @@ tato,d3_estocadas_bulgaras,Estocadas o búlgaras livianas,bulgaras,compartido
 tato,d3_jalon_o_remo,Jalón o remo en máquina,jalon_prono,compartido-merge
 tato,d3_press_pecho_maquina,Press de pecho en máquina,press_pecho_maquina,compartido
 tato,d3_ab_wheel,Ab wheel,ab_wheel,compartido
-tato,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_extension,historico-superserie
+tato,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_mancuernas,historico-superserie
 tato,d3_sexto,Vuelos posteriores en máquina,vuelos_posteriores,variante
 gabi,d1_back_squat,Back squat,back_squat,compartido
 gabi,d1_prensa,Prensa,prensa,compartido
@@ -33,5 +33,5 @@ gabi,d3_estocadas_bulgaras,Estocadas o búlgaras livianas,bulgaras,compartido
 gabi,d3_jalon_o_remo,Jalón o remo en máquina,jalon_prono,compartido-merge
 gabi,d3_press_pecho_maquina,Press de pecho en máquina,press_pecho_maquina,compartido
 gabi,d3_ab_wheel,Ab wheel,ab_wheel,compartido
-gabi,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_extension,historico-superserie
+gabi,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_mancuernas,historico-superserie
 gabi,d3_sexto,Frog pump,frog_pump,variante

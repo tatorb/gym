@@ -33,7 +33,7 @@ const EQUIV = {
     d2_vuelos_laterales:"vuelos_laterales", d2_remo_polea_baja:"remo_polea_baja",
     d2_superserie_biceps_triceps:"superserie_curl_triceps_polea", d2_sexto:"plancha_lateral",
     d3_estocadas_bulgaras:"bulgaras", d3_jalon_o_remo:"jalon_prono", d3_press_pecho_maquina:"press_pecho_maquina",
-    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_extension", d3_sexto:"vuelos_posteriores",
+    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_mancuernas", d3_sexto:"vuelos_posteriores",
   },
   gabi: {
     d1_back_squat:"back_squat", d1_prensa:"prensa", d1_jalon_prono:"jalon_prono",
@@ -42,7 +42,7 @@ const EQUIV = {
     d2_vuelos_laterales:"vuelos_laterales", d2_remo_polea_baja:"remo_polea_baja",
     d2_superserie_biceps_triceps:"superserie_curl_triceps_polea", d2_sexto:"peso_muerto_rumano_mancuernas",
     d3_estocadas_bulgaras:"bulgaras", d3_jalon_o_remo:"jalon_prono", d3_press_pecho_maquina:"press_pecho_maquina",
-    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_extension", d3_sexto:"frog_pump",
+    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_mancuernas", d3_sexto:"frog_pump",
   },
 };
 // Todos los IDs (nuevo + viejos equivalentes) a buscar en el historial.
@@ -74,22 +74,25 @@ function fechaCorta(iso) {
 }
 
 // Resuelve un ejercicio del plan para un usuario.
-// Nuevo esquema: IDs por nombre (compartidos). Tato ve objetivos; Gabi no.
+// IDs por nombre (compartidos). Admite 'variantes' por persona (ej. Gabi: dead bug).
+// Tato ve objetivos; Gabi no.
 function resolveExercise(ex, user) {
-  const ss = Array.isArray(ex.superset) && ex.superset.length === 2 ? ex.superset : null;
+  let base = ex;
+  if (ex.variantes && ex.variantes[user]) base = { ...ex, ...ex.variantes[user] };
+  const ss = Array.isArray(base.superset) && base.superset.length === 2 ? base.superset : null;
   return {
-    id: ex.id,
-    nombre: ex.nombre,
-    series: ex.series != null ? ex.series : (ss ? ss[0].series : undefined),
-    reps: ex.reps != null ? ex.reps : (ss ? ss[0].reps : undefined),
-    rir: ex.rir != null ? ex.rir : null,
-    indicacion: ex.indicacion || "",
+    id: base.id || ex.id,
+    nombre: base.nombre,
+    series: base.series != null ? base.series : (ss ? ss[0].series : undefined),
+    reps: base.reps != null ? base.reps : (ss ? ss[0].reps : undefined),
+    rir: base.rir != null ? base.rir : null,
+    indicacion: base.indicacion || "",
     notaUsuario: null,
-    medida: ex.medida || "kg",
-    video: ex.video || null,
+    medida: base.medida || "kg",
+    video: base.video || null,
     superset: ss ? ss.map(m => m.nombre) : null,   // nombres para el formulario
     supersetDetalle: ss,                           // series/reps por movimiento
-    repsVar: !ss && /\d\s*-\s*\d/.test(String(ex.reps || "")),
+    repsVar: !ss && /\d\s*-\s*\d/.test(String(base.reps || "")),
     prescrito: user === "tato",                    // Tato: con objetivos; Gabi: libre
   };
 }

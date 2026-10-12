@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Plan nuevo (borrador PASO 2). Tato ve series/reps/RIR + bloque de 5 semanas. Gabi ve la misma lista SIN objetivos y puede agregar del catálogo. IDs por nombre (compartidos).",
+  "_ayuda": "Plan nuevo. Tato: series/reps/RIR + bloque de 5 semanas. Gabi: misma lista SIN objetivos (con alguna variante propia). IDs por nombre.",
   "usuarios": {
     "tato": {
       "nombre": "Tato",
@@ -29,11 +29,11 @@
       "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "pallof_press",
-          "nombre": "Pallof press",
-          "medida": "kg",
-          "series": 3,
-          "reps": "12 por lado"
+          "id": "plancha_frontal",
+          "nombre": "Plancha frontal",
+          "medida": "seg",
+          "series": 2,
+          "reps": "40"
         },
         {
           "id": "curl_femoral",
@@ -70,7 +70,14 @@
           "nombre": "Ab wheel",
           "medida": "reps",
           "series": 3,
-          "reps": "10-14"
+          "reps": "10-14",
+          "variantes": {
+            "gabi": {
+              "id": "dead_bug",
+              "nombre": "Dead bug",
+              "medida": "reps"
+            }
+          }
         }
       ]
     },
@@ -79,6 +86,11 @@
       "nombre": "Martes",
       "subtitulo": "Calistenia o caminata",
       "tipo": "entreno",
+      "caminataAlt": true,
+      "actividades": [
+        "Caminata",
+        "Fútbol"
+      ],
       "ejercicios": [
         {
           "id": "dominadas",
@@ -124,11 +136,6 @@
           "series": 3,
           "reps": "20-30"
         }
-      ],
-      "caminataAlt": true,
-      "actividades": [
-        "Caminata",
-        "Fútbol"
       ]
     },
     {
@@ -173,13 +180,12 @@
           "video": "https://youtube.com/shorts/HJLzMM_naPg"
         },
         {
-          "id": "frog_pump",
-          "nombre": "Frog pump",
-          "medida": "reps",
-          "series": 2,
-          "reps": "20",
-          "rir": 2,
-          "video": "https://youtu.be/4M_-vB5SXXE"
+          "id": "patada_gluteo_maquina",
+          "nombre": "Patada de glúteo en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12 por pierna",
+          "rir": 2
         }
       ]
     },
@@ -188,11 +194,11 @@
       "nombre": "Jueves",
       "subtitulo": "Fútbol o caminata",
       "tipo": "cardio",
-      "ejercicios": [],
       "opciones": [
         "Fútbol",
         "Caminata"
-      ]
+      ],
+      "ejercicios": []
     },
     {
       "id": "viernes",
@@ -237,34 +243,32 @@
           "video": "https://youtube.com/shorts/k6tzKisR3NY"
         },
         {
-          "id": "superserie_vuelos",
-          "nombre": "Superserie: vuelos laterales + posteriores",
+          "id": "vuelos_laterales",
+          "nombre": "Vuelos laterales",
           "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Vuelos laterales",
-              "series": 3,
-              "reps": "12-15"
-            },
-            {
-              "nombre": "Vuelos posteriores",
-              "series": 2,
-              "reps": "15"
-            }
-          ]
+          "series": 3,
+          "reps": "12-15",
+          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
         },
         {
-          "id": "superserie_curl_w_triceps",
-          "nombre": "Superserie: curl barra W + tríceps en polea",
+          "id": "vuelos_posteriores",
+          "nombre": "Vuelos posteriores en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "15"
+        },
+        {
+          "id": "superserie_curl_triceps_mancuernas",
+          "nombre": "Superserie: curl + tríceps con mancuernas",
           "medida": "kg",
           "superset": [
             {
-              "nombre": "Curl con barra W",
+              "nombre": "Curl con mancuernas",
               "series": 3,
               "reps": "10"
             },
             {
-              "nombre": "Tríceps en polea",
+              "nombre": "Extensión de tríceps con mancuerna",
               "series": 3,
               "reps": "10"
             }
@@ -277,17 +281,17 @@
       "nombre": "Sábado",
       "subtitulo": "Caminata",
       "tipo": "cardio",
-      "ejercicios": [],
       "opciones": [
         "Caminata"
-      ]
+      ],
+      "ejercicios": []
     }
   ],
   "catalogo": [
     {
-      "id": "pallof_press",
-      "nombre": "Pallof press",
-      "medida": "kg"
+      "id": "plancha_frontal",
+      "nombre": "Plancha frontal",
+      "medida": "seg"
     },
     {
       "id": "curl_femoral",
@@ -314,6 +318,11 @@
     {
       "id": "ab_wheel",
       "nombre": "Ab wheel",
+      "medida": "reps"
+    },
+    {
+      "id": "dead_bug",
+      "nombre": "Dead bug",
       "medida": "reps"
     },
     {
@@ -370,10 +379,9 @@
       "video": "https://youtube.com/shorts/HJLzMM_naPg"
     },
     {
-      "id": "frog_pump",
-      "nombre": "Frog pump",
-      "medida": "reps",
-      "video": "https://youtu.be/4M_-vB5SXXE"
+      "id": "patada_gluteo_maquina",
+      "nombre": "Patada de glúteo en máquina",
+      "medida": "kg"
     },
     {
       "id": "press_inclinado_mancuernas",
@@ -409,23 +417,30 @@
     },
     {
       "id": "vuelos_posteriores",
-      "nombre": "Vuelos posteriores",
+      "nombre": "Vuelos posteriores en máquina",
       "medida": "kg"
     },
     {
-      "id": "curl_barra_w",
-      "nombre": "Curl con barra W",
+      "id": "curl_mancuernas",
+      "nombre": "Curl con mancuernas",
       "medida": "kg"
     },
     {
-      "id": "triceps_polea",
-      "nombre": "Tríceps en polea",
+      "id": "extension_triceps_mancuerna",
+      "nombre": "Extensión de tríceps con mancuerna",
       "medida": "kg"
     },
     {
-      "id": "remo_maquina",
-      "nombre": "Remo en máquina",
-      "medida": "kg"
+      "id": "frog_pump",
+      "nombre": "Frog pump",
+      "medida": "reps",
+      "video": "https://youtu.be/4M_-vB5SXXE"
+    },
+    {
+      "id": "peso_muerto_rumano_mancuernas",
+      "nombre": "Peso muerto rumano con mancuernas",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/VB6Wu90UHZA"
     },
     {
       "id": "hip_thrust_maquina",
@@ -434,10 +449,9 @@
       "video": "https://youtube.com/shorts/m8g9VogoxMo"
     },
     {
-      "id": "peso_muerto_rumano_mancuernas",
-      "nombre": "Peso muerto rumano con mancuernas",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/VB6Wu90UHZA"
+      "id": "remo_maquina",
+      "nombre": "Remo en máquina",
+      "medida": "kg"
     }
   ]
 }
