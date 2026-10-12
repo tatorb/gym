@@ -1,214 +1,438 @@
 {
-  "_ayuda": "Este archivo es el plan de entrenamiento. Podés editarlo a mano. Cada ejercicio tiene: id (no repetir, sin espacios), nombre, series, reps, indicacion. Si un ejercicio cambia entre Tato y Gabi, usá 'variantes' con una entrada por usuario. Si Tato o Gabi tienen una nota extra en un ejercicio compartido, usá 'notas'.",
+  "_ayuda": "Plan nuevo (borrador PASO 2). Tato ve series/reps/RIR + bloque de 5 semanas. Gabi ve la misma lista SIN objetivos y puede agregar del catálogo. IDs por nombre (compartidos).",
   "usuarios": {
-    "tato": { "nombre": "Tato", "color": "#3B82F6" },
-    "gabi": { "nombre": "Gabi", "color": "#EC4899" }
+    "tato": {
+      "nombre": "Tato",
+      "color": "#5B7382"
+    },
+    "gabi": {
+      "nombre": "Gabi",
+      "color": "#f4d7e1"
+    }
+  },
+  "bloque": {
+    "inicio": "2026-10-19",
+    "semanas": 5,
+    "reglas": [
+      "Semana 1 · Cargas base (RIR 2-3)",
+      "Semana 2 · Mismas cargas, +1-2 reps",
+      "Semana 3 · Subí el escalón mínimo de carga",
+      "Semana 4 · Una serie extra en los 2 primeros ejercicios del día",
+      "Semana 5 · Descarga: mitad de series, -10% de carga (RIR 3-4)"
+    ]
   },
   "dias": [
     {
-      "id": "dia1",
-      "nombre": "Día 1",
-      "subtitulo": "Inferior pesado + espalda",
+      "id": "lunes",
+      "nombre": "Lunes",
+      "subtitulo": "Piernas + core",
+      "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "d1_back_squat",
+          "id": "pallof_press",
+          "nombre": "Pallof press",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12 por lado"
+        },
+        {
+          "id": "curl_femoral",
+          "nombre": "Curl femoral",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10",
+          "video": "https://youtube.com/shorts/xB1lGVzRwWk"
+        },
+        {
+          "id": "back_squat",
           "nombre": "Back squat",
+          "medida": "kg",
           "series": 4,
-          "reps": "5",
-          "indicacion": "Peso pesado. Bajá controlado hasta que el muslo quede paralelo, empujá con el talón."
+          "reps": "5"
         },
         {
-          "id": "d1_prensa",
+          "id": "prensa",
           "nombre": "Prensa",
+          "medida": "kg",
           "series": 3,
-          "reps": "10-12",
-          "video": "https://youtube.com/shorts/EotSw18oR9w?si=1mxtOosmFf1d27eO",
-          "indicacion": "Rango completo sin bloquear rodillas arriba. Rodillas en línea con los pies."
-        },
-        {
-          "id": "d1_jalon_prono",
-          "nombre": "Jalón en polea prono",
-          "series": 4,
           "reps": "8-10",
-          "indicacion": "Agarre ancho, palmas al frente. Llevá la barra al pecho tirando con la espalda, no con los brazos."
+          "video": "https://youtube.com/shorts/EotSw18oR9w"
         },
         {
-          "id": "d1_remo_maquina",
-          "nombre": "Remo en máquina",
+          "id": "extension_cuadriceps",
+          "nombre": "Extensión de cuádriceps",
+          "medida": "kg",
           "series": 3,
-          "reps": "10",
-          "indicacion": "Pecho apoyado, juntá los omóplatos al final de cada tirón."
+          "reps": "12"
         },
         {
-          "id": "d1_quinto",
-          "variantes": {
-            "gabi": {
-              "nombre": "Hip thrust en máquina",
-              "series": 3,
-              "reps": "10-12",
-              "video": "https://youtube.com/shorts/m8g9VogoxMo?si=20e_y43zgZr_yvNi",
-              "indicacion": "Empujá con el glúteo, pausá arriba 1 segundo apretando."
-            },
-            "tato": {
-              "nombre": "Curl femoral",
-              "series": 3,
-              "reps": "10",
-              "video": "https://youtube.com/shorts/xB1lGVzRwWk?si=NnmIiwikqx5xKLmo",
-              "indicacion": "Bajá lento la carga, sentí el estiramiento del isquiotibial."
-            }
-          }
-        },
-        {
-          "id": "d1_sexto",
-          "variantes": {
-            "gabi": {
-              "nombre": "Abducción en máquina",
-              "series": 2,
-              "reps": "15-17",
-              "video": "https://youtube.com/shorts/HJLzMM_naPg?si=wPrDR0oQpSrtzx_I",
-              "indicacion": "Torso levemente hacia adelante, abrí con el glúteo medio, sin balancear."
-            },
-            "tato": {
-              "nombre": "Press inclinado con mancuernas",
-              "series": 3,
-              "reps": "8",
-              "indicacion": "Banco inclinado 30°. Bajá controlado hasta el pecho, no choques las mancuernas arriba."
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "dia2",
-      "nombre": "Día 2",
-      "subtitulo": "Superior + glúteo",
-      "ejercicios": [
-        {
-          "id": "d2_hip_thrust_barra",
-          "nombre": "Hip thrust con barra",
-          "series": 4,
-          "reps": "10",
-          "video": "https://youtube.com/shorts/42lU8xsumBo?si=nWOtgWYdnblTYTj1",
-          "indicacion": "Barbilla al pecho, extendé la cadera hasta arriba y apretá el glúteo 1 segundo."
-        },
-        {
-          "id": "d2_press_militar_mancuernas",
-          "nombre": "Press militar con mancuernas",
-          "series": 3,
-          "reps": "10",
-          "video": "https://youtube.com/shorts/k6tzKisR3NY?si=bLiQzYz6L23_D3yL",
-          "indicacion": "Sentado o de pie con abdomen firme. Subí sin arquear la espalda."
-        },
-        {
-          "id": "d2_vuelos_laterales",
-          "nombre": "Vuelos laterales",
-          "series": 3,
-          "reps": "12-15",
-          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs?si=QLKstGFenMsNRQr4",
-          "indicacion": "Codos apenas flexionados, subí hasta la altura del hombro sin usar impulso."
-        },
-        {
-          "id": "d2_remo_polea_baja",
-          "nombre": "Remo en polea baja",
-          "series": 3,
-          "reps": "10-12",
-          "indicacion": "Espalda recta, llevá el mango al abdomen tirando con los codos pegados."
-        },
-        {
-          "id": "d2_superserie_biceps_triceps",
-          "nombre": "Superserie: curl bíceps + tríceps en polea",
-          "series": 3,
-          "reps": "10 + 10",
-          "superset": ["Curl bíceps", "Tríceps en polea"],
-          "indicacion": "Hacé curl y sin descanso pasá a tríceps. Descansá recién al terminar los dos."
-        },
-        {
-          "id": "d2_sexto",
-          "variantes": {
-            "gabi": {
-              "nombre": "Peso muerto rumano con mancuernas",
-              "series": 3,
-              "reps": "10-12",
-              "video": "https://youtube.com/shorts/VB6Wu90UHZA?feature=shared",
-              "indicacion": "Piernas casi rectas, bajá empujando la cola atrás, sentí el estiramiento."
-            },
-            "tato": {
-              "nombre": "Plancha lateral",
-              "series": 3,
-              "reps": "25 seg por lado",
-              "medida": "seg",
-              "indicacion": "Cuerpo en línea recta, cadera arriba. Anotá los segundos que aguantaste por lado."
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "dia3",
-      "nombre": "Día 3",
-      "subtitulo": "Flexible",
-      "ejercicios": [
-        {
-          "id": "d3_estocadas_bulgaras",
-          "nombre": "Estocadas o búlgaras livianas",
-          "series": 2,
-          "reps": "10 por pierna",
-          "video": "https://youtu.be/QE4Bc1t9Evs?si=imUs5dodVOs7fIkq",
-          "indicacion": "Livianas y controladas. Rodilla de adelante en línea con el pie."
-        },
-        {
-          "id": "d3_jalon_o_remo",
-          "nombre": "Jalón o remo en máquina",
-          "series": 3,
-          "reps": "10-12",
-          "indicacion": "Elegí el que quieras hoy. Tirá con la espalda, controlá la vuelta."
-        },
-        {
-          "id": "d3_press_pecho_maquina",
-          "nombre": "Press de pecho en máquina",
-          "series": 3,
-          "reps": "10",
-          "indicacion": "Empujá sin bloquear los codos, controlá la vuelta.",
-          "notas": {
-            "tato": "Opcional: fondos en paralelas 3 × máximas repeticiones."
-          }
-        },
-        {
-          "id": "d3_ab_wheel",
+          "id": "ab_wheel",
           "nombre": "Ab wheel",
-          "series": 3,
-          "reps": "8-10",
           "medida": "reps",
-          "indicacion": "Rodá hacia adelante sin arquear la lumbar, mantené el abdomen firme."
-        },
-        {
-          "id": "d3_superserie_biceps_triceps",
-          "nombre": "Superserie: curl bíceps + extensión tríceps",
-          "series": 2,
-          "reps": "12 + 12",
-          "superset": ["Curl bíceps", "Extensión tríceps"],
-          "indicacion": "Curl y sin descanso extensión de tríceps. Descansá al terminar los dos."
-        },
-        {
-          "id": "d3_sexto",
-          "variantes": {
-            "gabi": {
-              "nombre": "Frog pump",
-              "series": 2,
-              "reps": "20",
-              "medida": "reps",
-              "video": "https://youtu.be/4M_-vB5SXXE?si=k9ceMI1Zele7udSB",
-              "indicacion": "Plantas de los pies juntas, rodillas abiertas. Empujá con el glúteo."
-            },
-            "tato": {
-              "nombre": "Vuelos posteriores en máquina",
-              "series": 2,
-              "reps": "15",
-              "indicacion": "Abrí llevando los codos atrás, apretá el hombro posterior."
-            }
-          }
+          "series": 3,
+          "reps": "10-14"
         }
       ]
+    },
+    {
+      "id": "martes",
+      "nombre": "Martes",
+      "subtitulo": "Calistenia",
+      "tipo": "entreno",
+      "ejercicios": [
+        {
+          "id": "dominadas",
+          "nombre": "Dominadas",
+          "medida": "reps",
+          "series": 4,
+          "reps": "",
+          "rir": 2
+        },
+        {
+          "id": "fondos_paralelas",
+          "nombre": "Fondos en paralelas",
+          "medida": "reps",
+          "series": 3,
+          "reps": "",
+          "rir": 2
+        },
+        {
+          "id": "remo_invertido",
+          "nombre": "Remo invertido",
+          "medida": "reps",
+          "series": 3,
+          "reps": "10-12"
+        },
+        {
+          "id": "flexiones",
+          "nombre": "Flexiones",
+          "medida": "reps",
+          "series": 3,
+          "reps": "10-15"
+        },
+        {
+          "id": "plancha_lateral",
+          "nombre": "Plancha lateral",
+          "medida": "seg",
+          "series": 3,
+          "reps": "35"
+        },
+        {
+          "id": "hollow_hold",
+          "nombre": "Hollow hold",
+          "medida": "seg",
+          "series": 3,
+          "reps": "20-30"
+        }
+      ]
+    },
+    {
+      "id": "miercoles",
+      "nombre": "Miércoles",
+      "subtitulo": "Glúteos",
+      "tipo": "entreno",
+      "ejercicios": [
+        {
+          "id": "hip_thrust_barra",
+          "nombre": "Hip thrust con barra",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/42lU8xsumBo"
+        },
+        {
+          "id": "bulgaras",
+          "nombre": "Búlgaras",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10 por pierna",
+          "rir": 2,
+          "video": "https://youtu.be/QE4Bc1t9Evs"
+        },
+        {
+          "id": "hiperextensiones_45",
+          "nombre": "Hiperextensiones 45°",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12",
+          "rir": 2
+        },
+        {
+          "id": "abduccion_maquina",
+          "nombre": "Abducción en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "15",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/HJLzMM_naPg"
+        },
+        {
+          "id": "frog_pump",
+          "nombre": "Frog pump",
+          "medida": "reps",
+          "series": 2,
+          "reps": "20",
+          "rir": 2,
+          "video": "https://youtu.be/4M_-vB5SXXE"
+        }
+      ]
+    },
+    {
+      "id": "jueves",
+      "nombre": "Jueves",
+      "subtitulo": "Fútbol o caminata",
+      "tipo": "cardio",
+      "ejercicios": []
+    },
+    {
+      "id": "viernes",
+      "nombre": "Viernes",
+      "subtitulo": "Superior",
+      "tipo": "entreno",
+      "ejercicios": [
+        {
+          "id": "press_inclinado_mancuernas",
+          "nombre": "Press inclinado con mancuernas",
+          "medida": "kg",
+          "series": 4,
+          "reps": "6-8"
+        },
+        {
+          "id": "jalon_prono",
+          "nombre": "Jalón en polea prono",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8-10"
+        },
+        {
+          "id": "press_pecho_maquina",
+          "nombre": "Press de pecho en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10"
+        },
+        {
+          "id": "remo_polea_baja",
+          "nombre": "Remo en polea baja",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10-12"
+        },
+        {
+          "id": "press_militar_mancuernas",
+          "nombre": "Press militar con mancuernas",
+          "medida": "kg",
+          "series": 3,
+          "reps": "8-10",
+          "video": "https://youtube.com/shorts/k6tzKisR3NY"
+        },
+        {
+          "id": "superserie_vuelos",
+          "nombre": "Superserie: vuelos laterales + posteriores",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Vuelos laterales",
+              "series": 3,
+              "reps": "12-15"
+            },
+            {
+              "nombre": "Vuelos posteriores",
+              "series": 2,
+              "reps": "15"
+            }
+          ]
+        },
+        {
+          "id": "superserie_curl_w_triceps",
+          "nombre": "Superserie: curl barra W + tríceps en polea",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Curl con barra W",
+              "series": 3,
+              "reps": "10"
+            },
+            {
+              "nombre": "Tríceps en polea",
+              "series": 3,
+              "reps": "10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sabado",
+      "nombre": "Sábado",
+      "subtitulo": "Fútbol o caminata",
+      "tipo": "cardio",
+      "ejercicios": []
+    },
+    {
+      "id": "domingo",
+      "nombre": "Domingo",
+      "subtitulo": "Descanso",
+      "tipo": "descanso",
+      "ejercicios": []
+    }
+  ],
+  "catalogo": [
+    {
+      "id": "pallof_press",
+      "nombre": "Pallof press",
+      "medida": "kg"
+    },
+    {
+      "id": "curl_femoral",
+      "nombre": "Curl femoral",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/xB1lGVzRwWk"
+    },
+    {
+      "id": "back_squat",
+      "nombre": "Back squat",
+      "medida": "kg"
+    },
+    {
+      "id": "prensa",
+      "nombre": "Prensa",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/EotSw18oR9w"
+    },
+    {
+      "id": "extension_cuadriceps",
+      "nombre": "Extensión de cuádriceps",
+      "medida": "kg"
+    },
+    {
+      "id": "ab_wheel",
+      "nombre": "Ab wheel",
+      "medida": "reps"
+    },
+    {
+      "id": "dominadas",
+      "nombre": "Dominadas",
+      "medida": "reps"
+    },
+    {
+      "id": "fondos_paralelas",
+      "nombre": "Fondos en paralelas",
+      "medida": "reps"
+    },
+    {
+      "id": "remo_invertido",
+      "nombre": "Remo invertido",
+      "medida": "reps"
+    },
+    {
+      "id": "flexiones",
+      "nombre": "Flexiones",
+      "medida": "reps"
+    },
+    {
+      "id": "plancha_lateral",
+      "nombre": "Plancha lateral",
+      "medida": "seg"
+    },
+    {
+      "id": "hollow_hold",
+      "nombre": "Hollow hold",
+      "medida": "seg"
+    },
+    {
+      "id": "hip_thrust_barra",
+      "nombre": "Hip thrust con barra",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/42lU8xsumBo"
+    },
+    {
+      "id": "bulgaras",
+      "nombre": "Búlgaras",
+      "medida": "kg",
+      "video": "https://youtu.be/QE4Bc1t9Evs"
+    },
+    {
+      "id": "hiperextensiones_45",
+      "nombre": "Hiperextensiones 45°",
+      "medida": "kg"
+    },
+    {
+      "id": "abduccion_maquina",
+      "nombre": "Abducción en máquina",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/HJLzMM_naPg"
+    },
+    {
+      "id": "frog_pump",
+      "nombre": "Frog pump",
+      "medida": "reps",
+      "video": "https://youtu.be/4M_-vB5SXXE"
+    },
+    {
+      "id": "press_inclinado_mancuernas",
+      "nombre": "Press inclinado con mancuernas",
+      "medida": "kg"
+    },
+    {
+      "id": "jalon_prono",
+      "nombre": "Jalón en polea prono",
+      "medida": "kg"
+    },
+    {
+      "id": "press_pecho_maquina",
+      "nombre": "Press de pecho en máquina",
+      "medida": "kg"
+    },
+    {
+      "id": "remo_polea_baja",
+      "nombre": "Remo en polea baja",
+      "medida": "kg"
+    },
+    {
+      "id": "press_militar_mancuernas",
+      "nombre": "Press militar con mancuernas",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/k6tzKisR3NY"
+    },
+    {
+      "id": "vuelos_laterales",
+      "nombre": "Vuelos laterales",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
+    },
+    {
+      "id": "vuelos_posteriores",
+      "nombre": "Vuelos posteriores",
+      "medida": "kg"
+    },
+    {
+      "id": "curl_barra_w",
+      "nombre": "Curl con barra W",
+      "medida": "kg"
+    },
+    {
+      "id": "triceps_polea",
+      "nombre": "Tríceps en polea",
+      "medida": "kg"
+    },
+    {
+      "id": "remo_maquina",
+      "nombre": "Remo en máquina",
+      "medida": "kg"
+    },
+    {
+      "id": "hip_thrust_maquina",
+      "nombre": "Hip thrust en máquina",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/m8g9VogoxMo"
+    },
+    {
+      "id": "peso_muerto_rumano_mancuernas",
+      "nombre": "Peso muerto rumano con mancuernas",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/VB6Wu90UHZA"
     }
   ]
 }

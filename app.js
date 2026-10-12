@@ -22,6 +22,45 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 
+// Equivalencias de IDs viejos -> nuevos (por usuario). Sirve para que el
+// historial cargado con los códigos viejos siga apareciendo, aunque todavía
+// no se haya corrido la migración en Supabase.
+const EQUIV = {
+  tato: {
+    d1_back_squat:"back_squat", d1_prensa:"prensa", d1_jalon_prono:"jalon_prono",
+    d1_remo_maquina:"remo_maquina", d1_quinto:"curl_femoral", d1_sexto:"press_inclinado_mancuernas",
+    d2_hip_thrust_barra:"hip_thrust_barra", d2_press_militar_mancuernas:"press_militar_mancuernas",
+    d2_vuelos_laterales:"vuelos_laterales", d2_remo_polea_baja:"remo_polea_baja",
+    d2_superserie_biceps_triceps:"superserie_curl_triceps_polea", d2_sexto:"plancha_lateral",
+    d3_estocadas_bulgaras:"bulgaras", d3_jalon_o_remo:"jalon_prono", d3_press_pecho_maquina:"press_pecho_maquina",
+    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_extension", d3_sexto:"vuelos_posteriores",
+  },
+  gabi: {
+    d1_back_squat:"back_squat", d1_prensa:"prensa", d1_jalon_prono:"jalon_prono",
+    d1_remo_maquina:"remo_maquina", d1_quinto:"hip_thrust_maquina", d1_sexto:"abduccion_maquina",
+    d2_hip_thrust_barra:"hip_thrust_barra", d2_press_militar_mancuernas:"press_militar_mancuernas",
+    d2_vuelos_laterales:"vuelos_laterales", d2_remo_polea_baja:"remo_polea_baja",
+    d2_superserie_biceps_triceps:"superserie_curl_triceps_polea", d2_sexto:"peso_muerto_rumano_mancuernas",
+    d3_estocadas_bulgaras:"bulgaras", d3_jalon_o_remo:"jalon_prono", d3_press_pecho_maquina:"press_pecho_maquina",
+    d3_ab_wheel:"ab_wheel", d3_superserie_biceps_triceps:"superserie_curl_triceps_extension", d3_sexto:"frog_pump",
+  },
+};
+// Todos los IDs (nuevo + viejos equivalentes) a buscar en el historial.
+function histIds(user, newId) {
+  const map = EQUIV[user] || {};
+  const ids = new Set([newId]);
+  for (const oldId in map) if (map[oldId] === newId) ids.add(oldId);
+  return ids;
+}
+// Historial de un ejercicio (por id nuevo), uniendo los códigos viejos equivalentes.
+function exHistory(user, newId) {
+  const ids = histIds(user, newId);
+  return DB.all()
+    .filter(r => r.usuario === user && ids.has(r.ejercicio))
+    .sort((a, b) => a.fecha !== b.fecha ? (a.fecha < b.fecha ? 1 : -1)
+      : ((a.created_at || "") < (b.created_at || "") ? 1 : -1));
+}
+
 function hoyISO() {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -34,29 +73,41 @@ function fechaCorta(iso) {
   return `${d} ${MESES[m - 1]}`;
 }
 
-// Resuelve un ejercicio del plan para un usuario (aplica variantes y notas).
+// Resuelve un ejercicio del plan para un usuario.
+// Nuevo esquema: IDs por nombre (compartidos). Tato ve objetivos; Gabi no.
 function resolveExercise(ex, user) {
-  let base = ex;
-  if (ex.variantes && ex.variantes[user]) {
-    base = { ...ex, ...ex.variantes[user] };
-  }
-  const nota = ex.notas && ex.notas[user] ? ex.notas[user] : null;
+  const ss = Array.isArray(ex.superset) && ex.superset.length === 2 ? ex.superset : null;
   return {
     id: ex.id,
-    nombre: base.nombre,
-    series: base.series,
-    reps: base.reps,
-    indicacion: base.indicacion,
-    notaUsuario: nota,
-    medida: base.medida || "kg",   // 'kg' | 'reps' | 'seg' (posición inicial del toggle)
-    video: base.video || null,     // URL del video (YouTube = embebido; otro sitio = botón)
-    superset: Array.isArray(base.superset) && base.superset.length === 2 ? base.superset : null,
-    // Reps variables: el objetivo es un rango (ej. "10-12") -> campo para anotar las reps hechas.
-    repsVar: !base.superset && /\d\s*-\s*\d/.test(String(base.reps || "")),
+    nombre: ex.nombre,
+    series: ex.series != null ? ex.series : (ss ? ss[0].series : undefined),
+    reps: ex.reps != null ? ex.reps : (ss ? ss[0].reps : undefined),
+    rir: ex.rir != null ? ex.rir : null,
+    indicacion: ex.indicacion || "",
+    notaUsuario: null,
+    medida: ex.medida || "kg",
+    video: ex.video || null,
+    superset: ss ? ss.map(m => m.nombre) : null,   // nombres para el formulario
+    supersetDetalle: ss,                           // series/reps por movimiento
+    repsVar: !ss && /\d\s*-\s*\d/.test(String(ex.reps || "")),
+    prescrito: user === "tato",                    // Tato: con objetivos; Gabi: libre
   };
 }
 function objetivo(ex) {
-  return `${ex.series} × ${ex.reps}`;
+  if (ex.supersetDetalle) return ex.supersetDetalle.map(m => `${m.series}×${m.reps}`).join(" + ");
+  const base = (ex.reps != null && ex.reps !== "") ? `${ex.series} × ${ex.reps}` : `${ex.series} series`;
+  return ex.rir != null ? `${base} · RIR ${ex.rir}` : base;
+}
+// Texto del bloque de 5 semanas para hoy (solo Tato). null si no aplica.
+function bloqueActual() {
+  const b = PLAN.bloque;
+  if (!b || !b.inicio || !Array.isArray(b.reglas) || !b.reglas.length) return null;
+  const start = Date.parse(b.inicio + "T00:00:00");
+  const now = Date.parse(hoyISO() + "T00:00:00");
+  if (isNaN(start) || now < start) return null;
+  const semanas = b.semanas || b.reglas.length;
+  const idx = Math.floor((now - start) / (7 * 86400000)) % semanas;
+  return { n: idx + 1, texto: b.reglas[idx] || "" };
 }
 
 // Si la URL es de YouTube, devuelve el ID del video; si no, null.
@@ -408,6 +459,9 @@ function lastSessionDate(user, diaId) {
   const fechas = DB.all().filter(r => r.usuario === user && r.dia === diaId).map(r => r.fecha).sort();
   return fechas.length ? fechas[fechas.length - 1] : null;
 }
+// Día del plan que corresponde a hoy (según el día de la semana).
+const WEEKDAY_ID = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+function todayDayId() { return WEEKDAY_ID[new Date().getDay()]; }
 
 // ---------------- Menú de días ----------------
 function renderDays() {
@@ -415,43 +469,42 @@ function renderDays() {
   $("#greeting-name").textContent = nombre;
   $("#greeting-avatar").textContent = (nombre.charAt(0) || "?").toUpperCase();
 
-  // Info de última sesión por día + cuál "toca" (el que hace más que no entrenás).
-  const info = PLAN.dias.map(dia => {
-    const last = lastSessionDate(currentUser, dia.id);
-    return { dia, last, ago: last !== null ? daysAgoFrom(last) : Infinity };
-  });
-  let dueId = null, maxAgo = -1;
-  info.forEach(x => { if (x.ago > maxAgo) { maxAgo = x.ago; dueId = x.dia.id; } });
-
-  // Saludo: último entreno general.
-  const entrenados = info.filter(x => x.last !== null).sort((a, b) => a.last < b.last ? 1 : -1);
+  // Saludo: último registro general (de cualquier día).
+  const todas = DB.all().filter(r => r.usuario === currentUser).map(r => r.fecha).sort();
   const sub = $(".greeting-sub");
-  if (entrenados.length) {
-    const t = entrenados[0];
-    sub.textContent = `Último entreno: ${fraseHace(daysAgoFrom(t.last))} · ${t.dia.nombre}`;
-  } else {
-    sub.textContent = "¡Arrancá tu primer entreno! 💪";
-  }
+  sub.textContent = todas.length
+    ? `Último registro: ${fraseHace(daysAgoFrom(todas[todas.length - 1]))}`
+    : "¡Arrancá tu primer entreno! 💪";
 
+  const hoyId = todayDayId();
   const cont = $("#days-list");
   cont.innerHTML = "";
-  info.forEach((x, i) => {
-    const dia = x.dia;
-    const n = dia.ejercicios.length;
-    const due = dia.id === dueId;
-    const ultimo = x.last !== null ? `último ${fraseHace(x.ago)}` : "sin registros";
+  PLAN.dias.forEach((dia, i) => {
+    const tipo = dia.tipo || "entreno";
+    const hoy = dia.id === hoyId;
     const card = document.createElement("button");
-    card.className = "day-card" + (due ? " day-due" : "");
-    card.style.animationDelay = `${i * 70}ms`;
+    card.className = `day-card day-${tipo}` + (hoy ? " day-due" : "");
+    card.style.animationDelay = `${i * 60}ms`;
+    let badge, linea;
+    if (tipo === "entreno") {
+      const last = lastSessionDate(currentUser, dia.id);
+      badge = ICONS.dumbbell;
+      linea = `${dia.ejercicios.length} ejercicios · ${last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin registros"}`;
+    } else if (tipo === "cardio") {
+      badge = "⚽"; linea = "Fútbol o caminata";
+    } else {
+      badge = "☾"; linea = "Descanso";
+    }
     card.innerHTML = `
-      <div class="day-badge">${ICONS.dumbbell}</div>
+      <div class="day-badge">${badge}</div>
       <div class="day-body">
-        <span class="day-name">${dia.nombre}${due ? `<span class="due-badge">Toca</span>` : ""}</span>
+        <span class="day-name">${dia.nombre}${hoy ? `<span class="due-badge">Hoy</span>` : ""}</span>
         <span class="day-sub">${dia.subtitulo || ""}</span>
-        <span class="day-count">${n} ejercicios · ${ultimo}</span>
+        <span class="day-count">${linea}</span>
       </div>
-      <div class="day-chevron">${ICONS.chevron}</div>`;
-    card.addEventListener("click", () => openDay(dia));
+      ${tipo === "entreno" ? `<div class="day-chevron">${ICONS.chevron}</div>` : ""}`;
+    if (tipo === "entreno") card.addEventListener("click", () => openDay(dia));
+    else card.addEventListener("click", () => toast(tipo === "cardio" ? "Día de fútbol o caminata ⚽" : "Día de descanso ☾"));
     cont.appendChild(card);
   });
 }
@@ -462,6 +515,7 @@ function openDay(dia) {
   exercises = dia.ejercicios.map(ex => resolveExercise(ex, currentUser));
   currentIndex = 0;
   $("#ex-day-name").textContent = `${dia.nombre} · ${dia.subtitulo || ""}`;
+  renderBlockBanner();
   renderExercises();
   renderDots();
   renderUserSwitch();
@@ -469,6 +523,16 @@ function openDay(dia) {
   showScreen("exercise");
   requestAnimationFrame(() => scrollToIndex(0, false));
   DB.refresh().then(ok => { if (ok) refreshVisibleHistories(); });
+}
+
+// Banner del bloque de 5 semanas (solo Tato).
+function renderBlockBanner() {
+  const el = $("#block-banner");
+  if (!el) return;
+  const b = currentUser === "tato" ? bloqueActual() : null;
+  if (!b) { el.classList.add("hidden"); el.innerHTML = ""; return; }
+  el.classList.remove("hidden");
+  el.innerHTML = `<span class="bb-week">S${b.n}</span><span class="bb-text">${b.texto}</span>`;
 }
 
 // ---------------- Cambiar de persona (mismo día y nº de ejercicio) ----------------
@@ -560,7 +624,7 @@ function renderFinishCard() {
   const allDone = total > 0 && done === total;
   const list = exercises.map((ex, i) => {
     const ok = hechos.has(ex.id);
-    const ultima = DB.history(currentUser, ex.id)[0]?.fecha || null;
+    const ultima = exHistory(currentUser, ex.id)[0]?.fecha || null;
     const cuando = ok ? "hoy" : (ultima ? fechaCorta(ultima) : "sin registro");
     return `<button type="button" class="finish-row ${ok ? "ok" : "pending"}" data-goto-ex="${i}">
       <span class="finish-check">${ok ? "✓" : "✗"}</span>
@@ -712,7 +776,7 @@ function formatRecord(r) {
 function refreshLastLine(index, ex, el) {
   el = el || document.getElementById(`last-${index}`);
   if (!el) return;
-  const last = DB.history(currentUser, ex.id)[0];
+  const last = exHistory(currentUser, ex.id)[0];
   const ago = last ? daysAgoFrom(last.fecha) : null;
   const esHoy = ago !== null && ago <= 0;
   el.classList.toggle("today", esHoy); // verde si ya se hizo hoy
@@ -730,7 +794,7 @@ function buildExerciseCard(ex, index) {
   frag.innerHTML = `
     <div class="ex-top">
       <h2 class="ex-name">${ex.nombre}</h2>
-      <span class="ex-target">${objetivo(ex)}</span>
+      ${ex.prescrito ? `<span class="ex-target">${objetivo(ex)}</span>` : ""}
     </div>
     <div class="ex-chips">
       <button class="ex-chip" id="chip-tec-${index}" type="button">${ICONS.info}<span>Técnica${hasNota ? " •" : ""}</span></button>
@@ -765,7 +829,7 @@ function openTecnica(ex) {
   makeOverlay(`
     <div class="modal">
       <h3>${ex.nombre}</h3>
-      <div class="modal-sub">${objetivo(ex)}</div>
+      ${ex.prescrito ? `<div class="modal-sub">${objetivo(ex)}</div>` : ""}
       <p class="tec-cue">${ex.indicacion || "Sin indicación técnica."}</p>
       ${ex.notaUsuario ? `<div class="ex-note">📌 ${ex.notaUsuario}</div>` : ""}
       <button class="btn-ghost" data-close style="margin-top:16px">Cerrar</button>
@@ -794,7 +858,7 @@ function openHistorial(ex, index) {
 }
 
 function renderHistoryInto(el, exerciseId, onChange) {
-  const rows = DB.history(currentUser, exerciseId).slice(0, 8);
+  const rows = exHistory(currentUser, exerciseId).slice(0, 8);
   if (rows.length === 0) {
     el.innerHTML = `<div class="history-empty">Todavía no hay cargas. ¡Esta es la primera!</div>`;
     return;
@@ -1232,7 +1296,8 @@ function dedupRecords(list) {
   return Object.values(m);
 }
 function exerciseSeries(user, exId) {
-  return dedupRecords(DB.all().filter(r => r.usuario === user && r.ejercicio === exId))
+  const ids = histIds(user, exId);
+  return dedupRecords(DB.all().filter(r => r.usuario === user && ids.has(r.ejercicio)))
     .sort((a, b) => a.fecha < b.fecha ? -1 : 1);
 }
 function daySeries(user, diaId) {
@@ -1258,7 +1323,8 @@ function countPRs(user, dia, fecha, todayMap) {
   let n = 0;
   Object.values(todayMap).forEach(r => {
     if ((r.medida || "kg") !== "kg" || r.kg == null) return;
-    const prev = DB.all().filter(x => x.usuario === user && x.ejercicio === r.ejercicio &&
+    const ids = histIds(user, r.ejercicio);
+    const prev = DB.all().filter(x => x.usuario === user && ids.has(x.ejercicio) &&
       x.fecha < fecha && (x.medida || "kg") === "kg" && x.kg != null).map(x => Number(x.kg));
     const prevMax = prev.length ? Math.max(...prev) : 0;
     if (prevMax > 0 && Number(r.kg) > prevMax) n++;
@@ -1394,8 +1460,9 @@ function renderGeneral() {
 }
 
 function renderPorDia() {
-  if (!metricsDay) metricsDay = PLAN.dias[0].id;
-  const chips = PLAN.dias.map(d =>
+  const diasEntreno = PLAN.dias.filter(d => (d.tipo || "entreno") === "entreno");
+  if (!metricsDay || !diasEntreno.some(d => d.id === metricsDay)) metricsDay = diasEntreno[0].id;
+  const chips = diasEntreno.map(d =>
     `<button class="day-chip ${d.id === metricsDay ? "on" : ""}" data-dia="${d.id}">${d.nombre}</button>`).join("");
   const dia = PLAN.dias.find(d => d.id === metricsDay);
   const serie = daySeries(currentUser, metricsDay);
@@ -1426,7 +1493,7 @@ function renderPorDia() {
 }
 
 function renderPorEjercicio() {
-  const options = PLAN.dias.map(d =>
+  const options = PLAN.dias.filter(d => d.ejercicios && d.ejercicios.length).map(d =>
     `<optgroup label="${d.nombre}">` +
     d.ejercicios.map(exDef => {
       const ex = resolveExercise(exDef, currentUser);
