@@ -729,6 +729,7 @@ body[data-user] {
 .corp-body { flex: 1; overflow-y: auto; padding: 10px 16px calc(20px + var(--safe-bottom)); display: flex; flex-direction: column; gap: 14px; }
 .corp-form { display: flex; flex-direction: column; gap: 12px; }
 .corp-list { display: flex; flex-direction: column; gap: 8px; }
+.nut-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 10px; }
 
 /* Pantallas grandes: centrar el contenido como en un teléfono */
 @media (min-width: 640px) {

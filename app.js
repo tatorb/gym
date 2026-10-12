@@ -1830,12 +1830,115 @@ function openCardioMarker(dia) {
   };
 }
 
+// ================== PASO 5 — SUGERENCIA NUTRICIONAL (sin IA) ==================
+// Datos físicos fijos (altura en cm, edad en años).
+const PERFIL_FISICO = {
+  tato: { sexo: "h", altura: 191, edad: 38, objetivo: "Recomposición", factorCal: 0.97, prot: 2.0, grasa: 0.9, legumbres: true },
+  gabi: { sexo: "m", altura: 175, edad: 38, objetivo: "Mantenimiento", factorCal: 1.00, prot: 1.9, grasa: 1.0, legumbres: false },
+};
+const COMIDAS = [
+  { n: "Pechuga de pollo (150 g)", p: 33 },
+  { n: "Carne magra — nalga/cuadrada (150 g)", p: 30 },
+  { n: "Bife o asado magro (150 g)", p: 29 },
+  { n: "Pescado — merluza (150 g)", p: 28 },
+  { n: "Atún al natural (1 lata)", p: 26 },
+  { n: "3 huevos", p: 18 },
+  { n: "Yogur griego o natural (1 pote)", p: 15 },
+  { n: "Queso magro (50 g)", p: 12 },
+  { n: "Lentejas o garbanzos (1 plato)", p: 15, legumbre: true },
+];
+function isoMinusDays(iso, d) {
+  const dt = new Date(Date.parse(iso + "T00:00:00") - d * 86400000);
+  const mm = String(dt.getMonth() + 1).padStart(2, "0"), dd = String(dt.getDate()).padStart(2, "0");
+  return `${dt.getFullYear()}-${mm}-${dd}`;
+}
+// Ajuste quincenal según la tendencia de peso y cintura (~2 semanas).
+function ajusteQuincenal(user) {
+  const pes = DB.corpHistory(user).filter(r => r.peso != null); // desc por fecha
+  if (pes.length < 2) return { kcal: 0, motivo: "Cargá al menos 2 pesadas (separadas ~2 semanas) para ajustar." };
+  const latest = pes[0];
+  const cutoff = isoMinusDays(latest.fecha, 14);
+  let earlier = pes.find(r => r.fecha <= cutoff) || pes[pes.length - 1];
+  if (earlier.id === latest.id) return { kcal: 0, motivo: "Todavía no hay ~2 semanas entre pesadas para ajustar." };
+  const dPeso = latest.peso - earlier.peso;
+  const cin = DB.corpHistory(user).filter(r => r.cintura != null);
+  let dCint = null;
+  if (cin.length >= 2) {
+    const ec = cin.find(r => r.fecha <= cutoff) || cin[cin.length - 1];
+    if (ec.id !== cin[0].id) dCint = cin[0].cintura - ec.cintura;
+  }
+  if (dCint != null && dCint > 0 && dPeso > 0)
+    return { kcal: -150, motivo: `Subió la cintura (+${dCint.toFixed(1)} cm) y el peso (+${dPeso.toFixed(1)} kg) en ~2 semanas → bajar 150 kcal.` };
+  if (dPeso < -1 && (dCint == null || dCint >= 0))
+    return { kcal: 150, motivo: `Bajaste ${Math.abs(dPeso).toFixed(1)} kg sin bajar cintura → subir 150 kcal.` };
+  return { kcal: 0, motivo: "Tendencia estable → mantener." };
+}
+function calcNutricion(user) {
+  const pf = PERFIL_FISICO[user];
+  if (!pf) return null;
+  const ultima = DB.corpHistory(user).find(r => r.peso != null);
+  if (!ultima) return { sinPeso: true };
+  const peso = Number(ultima.peso);
+  const bmr = 10 * peso + 6.25 * pf.altura - 5 * pf.edad + (pf.sexo === "h" ? 5 : -161);
+  const tdee = bmr * 1.55;
+  let base = tdee * pf.factorCal;
+  const aj = ajusteQuincenal(user);
+  let final = base + aj.kcal;
+  let notaGabi = "";
+  if (user === "gabi" && final < tdee) { final = tdee; notaGabi = " Para Gabi no sugerimos déficit: mantenemos en mantenimiento."; }
+  const r10 = x => Math.round(x / 10) * 10;
+  const protG = Math.round(pf.prot * peso), grasaG = Math.round(pf.grasa * peso);
+  const carbKcal = Math.max(0, final - protG * 4 - grasaG * 9);
+  const carbG = Math.round(carbKcal / 4);
+  const efectivo = Math.round((final - base) / 10) * 10; // ajuste real aplicado
+  return {
+    pf, peso, fecha: ultima.fecha,
+    tdee: r10(tdee), calorias: r10(final), efectivo,
+    protG, grasaG, carbG,
+    protKcal: protG * 4, grasaKcal: grasaG * 9, carbKcal: Math.round(carbKcal),
+    aguaBaja: (35 * peso / 1000).toFixed(1), aguaAlta: (45 * peso / 1000).toFixed(1),
+    ajuste: aj, notaGabi,
+  };
+}
+function openNutricion() { renderNutricion(); showScreen("nutricion"); DB.corpRefresh().then(ok => { if (ok) renderNutricion(); }); }
+function renderNutricion() {
+  const body = $("#nut-body");
+  const d = calcNutricion(currentUser);
+  const nombre = PLAN.usuarios[currentUser]?.nombre || currentUser;
+  if (!d) { body.innerHTML = ""; return; }
+  if (d.sinPeso) {
+    body.innerHTML = `<div class="metric-card"><div class="chart-empty">Cargá tu peso en <b>Registro corporal</b> para ver tu sugerencia nutricional. 📏</div></div>`;
+    return;
+  }
+  const comidas = COMIDAS.filter(c => !c.legumbre || d.pf.legumbres);
+  const signo = d.efectivo > 0 ? "+" : "";
+  body.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-title">${nombre} · ${d.pf.objetivo}</div>
+      <div class="metric-sub" style="text-align:left;margin-top:0">Peso usado: ${d.peso} kg (${fechaCorta(d.fecha)}) · Mantenimiento ≈ ${d.tdee} kcal</div>
+    </div>
+    ${statTiles([{ v: d.calorias, l: "kcal / día" }, { v: d.protG + " g", l: "Proteína" }])}
+    ${statTiles([{ v: d.grasaG + " g", l: "Grasas" }, { v: d.carbG + " g", l: "Carbohidratos" }])}
+    <div class="metric-card">
+      <div class="metric-title">Agua</div>
+      <div class="metric-sub" style="text-align:left;margin-top:0">${d.aguaBaja} – ${d.aguaAlta} litros por día</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">Ajuste quincenal ${d.efectivo !== 0 ? `(${signo}${d.efectivo} kcal)` : "(sin cambios)"}</div>
+      <div class="metric-sub" style="text-align:left;margin-top:0">${d.ajuste.motivo}${d.notaGabi}</div>
+    </div>
+    <div class="section-label">Para llegar a ~${d.protG} g de proteína</div>
+    <div class="metric-card">
+      <div class="nut-sub">Combiná 3-4 de estas opciones en el día:</div>
+      ${comidas.map(c => `<div class="mini-row"><span class="mini-name">${c.n}</span><span class="mini-val">${c.p} g</span></div>`).join("")}
+    </div>`;
+}
+
 // ---------------- Botones de navegación generales ----------------
 function doGoto(target) {
   if (target === "user") { showScreen("user"); }
   else if (target === "days") { renderDays(); showScreen("days"); }
-}
-$$("[data-goto]").forEach(btn => {
+}$$("[data-goto]").forEach(btn => {
   btn.addEventListener("click", () => {
     const target = btn.dataset.goto;
     // Si salimos de un ejercicio con datos sin guardar, preguntamos primero.
@@ -1849,6 +1952,7 @@ $$("[data-goto]").forEach(btn => {
 $("#btn-export").addEventListener("click", openExportMenu);
 $("#btn-metrics").addEventListener("click", openMetrics);
 $("#btn-corporal").addEventListener("click", openCorporal);
+$("#btn-nutricion").addEventListener("click", openNutricion);
 $$("#metrics-tabs button").forEach(b => b.addEventListener("click", () => { metricsTab = b.dataset.tab; renderMetrics(); }));
 $$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
 
