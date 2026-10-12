@@ -491,7 +491,8 @@ function renderDays() {
       badge = ICONS.dumbbell;
       linea = `${dia.ejercicios.length} ejercicios · ${last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin registros"}`;
     } else if (tipo === "cardio") {
-      badge = "⚽"; linea = "Fútbol o caminata";
+      const last = lastSessionDate(currentUser, dia.id);
+      badge = "⚽"; linea = "Fútbol o caminata" + (last !== null ? " · último " + fraseHace(daysAgoFrom(last)) : "");
     } else {
       badge = "☾"; linea = "Descanso";
     }
@@ -504,7 +505,8 @@ function renderDays() {
       </div>
       ${tipo === "entreno" ? `<div class="day-chevron">${ICONS.chevron}</div>` : ""}`;
     if (tipo === "entreno") card.addEventListener("click", () => openDay(dia));
-    else card.addEventListener("click", () => toast(tipo === "cardio" ? "Día de fútbol o caminata ⚽" : "Día de descanso ☾"));
+    else if (tipo === "cardio") card.addEventListener("click", () => openCardioMarker(dia));
+    else card.addEventListener("click", () => toast("Día de descanso ☾"));
     cont.appendChild(card);
   });
 }
@@ -1340,7 +1342,7 @@ function weekKey(fecha) {
 }
 function weekShort(k) { const [, m, d] = k.split("-"); return `${Number(d)}/${Number(m)}`; }
 function generalWeekly(user) {
-  const recs = dedupRecords(DB.all().filter(r => r.usuario === user));
+  const recs = dedupRecords(DB.all().filter(r => r.usuario === user && r.ejercicio !== "cardio"));
   const byWeek = {};
   recs.forEach(r => {
     const k = weekKey(r.fecha);
@@ -1443,8 +1445,8 @@ function statTiles(tiles) {
 function renderGeneral() {
   const weeks = generalWeekly(currentUser).slice(-10);
   if (!weeks.length) return `<div class="metric-card">${CHART_EMPTY}</div>`;
-  const totalSes = new Set(dedupRecords(DB.all().filter(r => r.usuario === currentUser)).map(r => r.fecha)).size;
-  const totalVol = dedupRecords(DB.all().filter(r => r.usuario === currentUser)).reduce((s, r) => s + recordVolume(r), 0);
+  const totalSes = new Set(dedupRecords(DB.all().filter(r => r.usuario === currentUser && r.ejercicio !== "cardio")).map(r => r.fecha)).size;
+  const totalVol = dedupRecords(DB.all().filter(r => r.usuario === currentUser && r.ejercicio !== "cardio")).reduce((s, r) => s + recordVolume(r), 0);
   const sesiones = weeks.map(w => ({ value: w.sessions, short: w.short }));
   const vol = weeks.map(w => ({ label: w.week, value: w.volume }));
   return `
@@ -1727,6 +1729,107 @@ function openExportMenu() {
   o.querySelector("#exp-csv").addEventListener("click", () => { o.remove(); exportHistoryCSV(); });
   o.querySelector("#exp-json").addEventListener("click", () => { o.remove(); exportBackup(); });
 }
+// ================== REGISTRO CORPORAL (peso / cintura / sueño) ==================
+function openCorporal() {
+  renderCorporal();
+  showScreen("corporal");
+  DB.corpRefresh().then(ok => { if (ok) renderCorporal(); });
+}
+function corpRow(r) {
+  const partes = [];
+  if (r.peso != null) partes.push(`${r.peso} kg`);
+  if (r.cintura != null) partes.push(`${r.cintura} cm`);
+  if (r.sueno != null) partes.push(`😴 ${r.sueno}`);
+  return `<button class="hist-row" data-corp-edit="${r.id}" type="button">
+    <span class="hist-date">${fechaCorta(r.fecha)}</span>
+    <span class="hist-main">${partes.join(" · ") || "—"}</span>
+    <span class="hist-spacer"></span>
+    <span class="hist-edit">✎</span></button>`;
+}
+function renderCorporal() {
+  const body = $("#corp-body");
+  const hist = DB.corpHistory(currentUser);
+  const asc = hist.slice().reverse();
+  const pesoSerie = asc.filter(r => r.peso != null).map(r => ({ label: r.fecha, value: Number(r.peso) }));
+  const cintSerie = asc.filter(r => r.cintura != null).map(r => ({ label: r.fecha, value: Number(r.cintura) }));
+  const fmt1 = v => (Math.round(v * 10) / 10).toString();
+  body.innerHTML = `
+    <div class="corp-form">
+      <div class="input-row">
+        <div class="field full"><label>Fecha</label>
+          <input type="date" id="corp-fecha" value="${hoyISO()}"></div>
+      </div>
+      <div class="input-row">
+        <div class="field"><label>Peso (kg)</label>
+          <input type="number" inputmode="decimal" step="0.1" id="corp-peso" placeholder="—"></div>
+        <div class="field"><label>Cintura (cm)</label>
+          <input type="number" inputmode="decimal" step="0.1" id="corp-cintura" placeholder="ombligo"></div>
+        <div class="field"><label>Sueño (1-10)</label>
+          <input type="number" inputmode="numeric" step="1" min="1" max="10" id="corp-sueno" placeholder="—"></div>
+      </div>
+      <button class="btn-save" id="corp-save">Guardar</button>
+    </div>
+    ${pesoSerie.length >= 2 ? `<div class="metric-card"><div class="metric-title">Evolución del peso (kg)</div>${svgLine(pesoSerie, { format: fmt1 })}</div>` : ""}
+    ${cintSerie.length >= 2 ? `<div class="metric-card"><div class="metric-title">Evolución de la cintura (cm)</div>${svgLine(cintSerie, { format: fmt1 })}</div>` : ""}
+    <div class="section-label">Historial</div>
+    ${hist.length ? `<div class="corp-list">${hist.map(corpRow).join("")}</div>` : `<div class="history-empty">Todavía no cargaste nada. 💪</div>`}`;
+  $("#corp-save").onclick = saveCorporal;
+  body.querySelectorAll("[data-corp-edit]").forEach(b => b.onclick = () => openCorpEdit(b.dataset.corpEdit));
+}
+function readCorpForm(prefix) {
+  const g = id => (document.getElementById(id)?.value || "").trim();
+  const n = v => v === "" ? null : Number(v);
+  return { fecha: g(prefix + "fecha") || hoyISO(), peso: n(g(prefix + "peso")), cintura: n(g(prefix + "cintura")), sueno: n(g(prefix + "sueno")) };
+}
+async function saveCorporal() {
+  const f = readCorpForm("corp-");
+  if (f.peso == null && f.cintura == null && f.sueno == null) { toast("Cargá al menos un dato."); return; }
+  await DB.corpSave({ usuario: currentUser, ...f });
+  toast("Guardado 📏");
+  renderCorporal();
+}
+function openCorpEdit(id) {
+  const r = DB.corpHistory(currentUser).find(x => x.id === id);
+  if (!r) return;
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>Editar registro</h3>
+      <div class="modal-sub">${fechaCorta(r.fecha)}</div>
+      <div class="input-row"><div class="field full"><label>Fecha</label>
+        <input type="date" id="ce-fecha" value="${r.fecha}"></div></div>
+      <div class="input-row">
+        <div class="field"><label>Peso (kg)</label><input type="number" step="0.1" id="ce-peso" value="${r.peso ?? ""}"></div>
+        <div class="field"><label>Cintura (cm)</label><input type="number" step="0.1" id="ce-cintura" value="${r.cintura ?? ""}"></div>
+        <div class="field"><label>Sueño</label><input type="number" step="1" min="1" max="10" id="ce-sueno" value="${r.sueno ?? ""}"></div>
+      </div>
+      <button class="btn-save" id="ce-save">Guardar cambios</button>
+      <div class="modal-row">
+        <button class="btn-ghost" data-close>Cancelar</button>
+        <button class="btn-danger" id="ce-del">Eliminar</button>
+      </div>
+    </div>`);
+  o.querySelector("#ce-save").onclick = async () => { await DB.corpUpdate(id, readCorpForm("ce-")); o.remove(); renderCorporal(); toast("Actualizado"); };
+  o.querySelector("#ce-del").onclick = async () => { if (!confirm("¿Eliminar este registro?")) return; await DB.corpRemove(id); o.remove(); renderCorporal(); toast("Eliminado"); };
+}
+
+// Marcar un día de fútbol/caminata.
+function openCardioMarker(dia) {
+  const hoy = hoyISO();
+  const yaHoy = DB.all().some(r => r.usuario === currentUser && r.fecha === hoy && r.dia === dia.id && r.ejercicio === "cardio");
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>${dia.nombre}</h3>
+      <div class="modal-sub">${yaHoy ? "Ya lo marcaste hoy ✅" : "¿Marcás que entrenaste o caminaste hoy?"}</div>
+      <button class="btn-primary" id="cm-ok">${yaHoy ? "Marcar otra vez" : "Marqué que entrené ⚽"}</button>
+      <div class="modal-row"><button class="btn-ghost" data-close>Cerrar</button></div>
+    </div>`);
+  o.querySelector("#cm-ok").onclick = async () => {
+    await DB.save({ fecha: hoy, usuario: currentUser, dia: dia.id, ejercicio: "cardio",
+      ejercicio_nombre: dia.subtitulo || "Fútbol o caminata", medida: "kg", kg: null, kg2: null, reps: null, rir: null, nota: "" });
+    o.remove(); renderDays(); toast("¡Anotado! ⚽");
+  };
+}
+
 // ---------------- Botones de navegación generales ----------------
 function doGoto(target) {
   if (target === "user") { showScreen("user"); }
@@ -1745,6 +1848,7 @@ $$("[data-goto]").forEach(btn => {
 });
 $("#btn-export").addEventListener("click", openExportMenu);
 $("#btn-metrics").addEventListener("click", openMetrics);
+$("#btn-corporal").addEventListener("click", openCorporal);
 $$("#metrics-tabs button").forEach(b => b.addEventListener("click", () => { metricsTab = b.dataset.tab; renderMetrics(); }));
 $$(".btn-user").forEach(b => b.addEventListener("click", () => selectUser(b.dataset.user)));
 

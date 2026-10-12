@@ -35,6 +35,23 @@ function uuid() {
 let records = load(LS_RECORDS, null);
 let outbox  = load(LS_OUTBOX, []);
 
+// Registro corporal (peso / cintura / sueño). Mismo modelo offline que registros.
+const LS_CORP    = "gym_corporal";
+const LS_CORP_OB = "gym_corporal_outbox";
+let corporal   = load(LS_CORP, []);
+let corpOutbox = load(LS_CORP_OB, []);
+function persistCorp() { store(LS_CORP, corporal); store(LS_CORP_OB, corpOutbox); }
+function corpView() { return corporal.map(r => ({ ...r, _pending: corpOutbox.some(o => o.id === r.id) })); }
+function corpReapply(serverRows) {
+  const map = new Map(serverRows.map(r => [r.id, { ...r }]));
+  for (const op of corpOutbox) {
+    if (op.op === "insert") map.set(op.id, { ...op.row });
+    else if (op.op === "update") { const r = map.get(op.id); if (r) Object.assign(r, op.fields); }
+    else if (op.op === "delete") map.delete(op.id);
+  }
+  return [...map.values()];
+}
+
 // Migración desde el formato anterior (gym_synced / gym_pending), si existiera.
 if (records === null) {
   const oldSynced = load("gym_synced", []);
@@ -310,9 +327,74 @@ export const DB = {
       exportado: new Date().toISOString(),
       total: all.length,
       registros: all.map(({ _pending, ...r }) => r),
+      corporal: corpView().map(({ _pending, ...r }) => r),
     };
+  },
+
+  // ---- Registro corporal (peso / cintura / sueño) ----
+  corpHistory(user) {
+    return corpView()
+      .filter(r => r.usuario === user)
+      .sort((a, b) => a.fecha !== b.fecha ? (a.fecha < b.fecha ? 1 : -1)
+        : ((a.created_at || "") < (b.created_at || "") ? 1 : -1));
+  },
+  async corpSave(data) {
+    const rec = { id: uuid(), created_at: new Date().toISOString(), ...data };
+    corporal.push(rec);
+    corpOutbox.push({ op: "insert", id: rec.id, row: { ...rec } });
+    persistCorp(); setStatus("saved"); this.corpSync();
+    return rec;
+  },
+  async corpUpdate(id, fields) {
+    const r = corporal.find(x => x.id === id);
+    if (!r) return;
+    Object.assign(r, fields);
+    const ins = corpOutbox.find(o => o.id === id && o.op === "insert");
+    if (ins) Object.assign(ins.row, fields);
+    else {
+      const upd = corpOutbox.find(o => o.id === id && o.op === "update");
+      if (upd) Object.assign(upd.fields, fields);
+      else corpOutbox.push({ op: "update", id, fields: { ...fields } });
+    }
+    persistCorp(); setStatus("saved"); this.corpSync();
+  },
+  async corpRemove(id) {
+    corporal = corporal.filter(x => x.id !== id);
+    const hadInsert = corpOutbox.some(o => o.id === id && o.op === "insert");
+    corpOutbox = corpOutbox.filter(o => o.id !== id);
+    if (!hadInsert) corpOutbox.push({ op: "delete", id });
+    persistCorp(); setStatus("saved"); this.corpSync();
+  },
+  async corpRefresh() {
+    const c = await getClient();
+    if (!c) return false;
+    const { data, error } = await c.from("corporal").select("*")
+      .order("fecha", { ascending: false }).order("created_at", { ascending: false });
+    if (error) return false; // tabla aún no creada o sin internet: seguimos local
+    corporal = corpReapply(data || []);
+    persistCorp();
+    if (corpOutbox.length) this.corpSync();
+    return true;
+  },
+  async corpSync() {
+    if (corpOutbox.length === 0) return;
+    const c = await getClient();
+    if (!c) return;
+    while (corpOutbox.length) {
+      const op = corpOutbox[0];
+      let error = null;
+      if (op.op === "insert") { const { error: e } = await c.from("corporal").insert(op.row); error = (e && e.code !== "23505") ? e : null; }
+      else if (op.op === "update") { const { error: e } = await c.from("corporal").update(op.fields).eq("id", op.id); error = e; }
+      else if (op.op === "delete") { const { error: e } = await c.from("corporal").delete().eq("id", op.id); error = e; }
+      if (error) { setStatus("error", { message: error.message }); return; }
+      corpOutbox.shift(); store(LS_CORP_OB, corpOutbox);
+    }
+    setStatus("idle");
   },
 };
 
 // Cuando vuelve internet, sincronizamos solos.
-window.addEventListener("online", () => { DB.refresh().then(() => DB.sync()); });
+window.addEventListener("online", () => {
+  DB.refresh().then(() => DB.sync());
+  DB.corpRefresh();
+});
