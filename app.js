@@ -1581,22 +1581,85 @@ function exportHistoryCSV() {
   toast(`Historial descargado (${all.length} cargas) 📁`);
 }
 
+// Exporta TODAS las métricas (de los dos usuarios): resumen general por
+// persona + tabla por ejercicio (sesiones, PR de peso, mejor y total de
+// volumen, progresión). Usa los mismos cálculos que la pantalla de métricas.
+function exportMetricsCSV() {
+  if (!DB.all().length) { toast("Todavía no hay datos para métricas."); return; }
+  const users = Object.keys(PLAN.usuarios);
+  // Mapa ejercicio -> día (para la tabla por ejercicio).
+  const diaDeEx = {};
+  PLAN.dias.forEach(d => d.ejercicios.forEach(ex => { diaDeEx[ex.id] = d; }));
+
+  const lineas = [];
+  // --- Bloque 1: resumen general por persona ---
+  lineas.push("RESUMEN GENERAL");
+  lineas.push(["usuario","entrenamientos","volumen_total","primera_sesion","ultima_sesion"].join(","));
+  users.forEach(u => {
+    const recs = dedupRecords(DB.all().filter(r => r.usuario === u));
+    const fechas = [...new Set(recs.map(r => r.fecha))].sort();
+    const volTotal = recs.reduce((s, r) => s + recordVolume(r), 0);
+    lineas.push([
+      PLAN.usuarios[u]?.nombre || u,
+      fechas.length,
+      Math.round(volTotal),
+      fechas[0] || "",
+      fechas[fechas.length - 1] || "",
+    ].map(csvCampo).join(","));
+  });
+
+  lineas.push(""); // separador
+  // --- Bloque 2: por ejercicio ---
+  lineas.push("POR EJERCICIO");
+  lineas.push(["usuario","dia","dia_nombre","ejercicio_id","ejercicio","unidad","sesiones",
+    "primera_fecha","primer_valor","ultima_fecha","ultimo_valor",
+    "mejor_peso_kg","mejor_volumen","volumen_total","progresion","progresion_pct"].join(","));
+  users.forEach(u => {
+    PLAN.dias.forEach(d => d.ejercicios.forEach(exDef => {
+      const ex = resolveExercise(exDef, u);
+      const recs = exerciseSeries(u, ex.id); // deduplicado por fecha, orden ascendente
+      if (!recs.length) return; // sin datos: no es una métrica
+      const primero = recs[0], ultimo = recs[recs.length - 1];
+      const unidad = exercisePrimary(ultimo).unidad;
+      const pv = exercisePrimary(primero).value;
+      const uv = exercisePrimary(ultimo).value;
+      const pesos = recs.filter(r => (r.medida || "kg") === "kg" && r.kg != null).map(r => Number(r.kg));
+      const mejorPeso = pesos.length ? Math.max(...pesos) : "";
+      const mejorVol = Math.round(Math.max(...recs.map(r => recordVolume(r))));
+      const volTotal = Math.round(recs.reduce((s, r) => s + recordVolume(r), 0));
+      const prog = uv - pv;
+      const progPct = pv > 0 ? Math.round(prog / pv * 100) : "";
+      lineas.push([
+        PLAN.usuarios[u]?.nombre || u, d.id, d.nombre, ex.id, ex.nombre, unidad, recs.length,
+        primero.fecha, round1(pv), ultimo.fecha, round1(uv),
+        mejorPeso, mejorVol, volTotal, round1(prog), progPct === "" ? "" : progPct + "%",
+      ].map(csvCampo).join(","));
+    }));
+  });
+
+  const csv = "﻿" + lineas.join("\r\n") + "\r\n"; // BOM para Excel
+  descargarArchivo(csv, `metricas-gym-${hoyISO()}.csv`, "text/csv;charset=utf-8");
+  toast("Métricas descargadas 📊");
+}
+function round1(v) { return Math.round(Number(v) * 10) / 10; }
+
 // Menú del botón ⤓: elegir qué descargar.
 function openExportMenu() {
   const o = makeOverlay(`
     <div class="modal">
       <h3>Descargar</h3>
       <div class="modal-sub">Elegí qué querés bajar</div>
-      <button class="btn-primary" id="exp-csv">Historial (CSV)</button>
+      <button class="btn-primary" id="exp-metrics">Métricas (CSV)</button>
+      <button class="btn-ghost" id="exp-csv" style="margin-top:10px">Historial (CSV)</button>
       <div class="modal-row">
         <button class="btn-ghost" id="exp-json">Respaldo (JSON)</button>
         <button class="btn-ghost" data-close>Cerrar</button>
       </div>
     </div>`);
+  o.querySelector("#exp-metrics").addEventListener("click", () => { o.remove(); exportMetricsCSV(); });
   o.querySelector("#exp-csv").addEventListener("click", () => { o.remove(); exportHistoryCSV(); });
   o.querySelector("#exp-json").addEventListener("click", () => { o.remove(); exportBackup(); });
 }
-
 // ---------------- Botones de navegación generales ----------------
 function doGoto(target) {
   if (target === "user") { showScreen("user"); }
