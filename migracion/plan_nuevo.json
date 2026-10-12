@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Plan nuevo. Tato: series/reps/RIR + bloque de 5 semanas. Gabi: misma lista SIN objetivos (con alguna variante propia). IDs por nombre.",
+  "_ayuda": "Plan. Tato: series/reps/RIR + bloque 5 semanas. Gabi: misma lista SIN objetivos (variante dead bug). IDs por nombre; vuelos_laterales y la superserie de mancuernas comparten ID en miércoles y viernes.",
   "usuarios": {
     "tato": {
       "nombre": "Tato",
@@ -25,7 +25,7 @@
     {
       "id": "lunes",
       "nombre": "Lunes",
-      "subtitulo": "Piernas + core",
+      "subtitulo": "Piernas + glúteos + core",
       "tipo": "entreno",
       "ejercicios": [
         {
@@ -51,6 +51,14 @@
           "reps": "5"
         },
         {
+          "id": "hip_thrust_barra",
+          "nombre": "Hip thrust con barra",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8",
+          "video": "https://youtube.com/shorts/42lU8xsumBo"
+        },
+        {
           "id": "prensa",
           "nombre": "Prensa",
           "medida": "kg",
@@ -59,11 +67,12 @@
           "video": "https://youtube.com/shorts/EotSw18oR9w"
         },
         {
-          "id": "extension_cuadriceps",
-          "nombre": "Extensión de cuádriceps",
+          "id": "abduccion_maquina",
+          "nombre": "Abducción en máquina",
           "medida": "kg",
           "series": 3,
-          "reps": "12"
+          "reps": "15",
+          "video": "https://youtube.com/shorts/HJLzMM_naPg"
         },
         {
           "id": "ab_wheel",
@@ -84,7 +93,7 @@
     {
       "id": "martes",
       "nombre": "Martes",
-      "subtitulo": "Calistenia o caminata",
+      "subtitulo": "Calistenia (opcional · complemento)",
       "tipo": "entreno",
       "caminataAlt": true,
       "actividades": [
@@ -141,51 +150,62 @@
     {
       "id": "miercoles",
       "nombre": "Miércoles",
-      "subtitulo": "Glúteos",
+      "subtitulo": "Superior A",
       "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "hip_thrust_barra",
-          "nombre": "Hip thrust con barra",
+          "id": "press_inclinado_mancuernas",
+          "nombre": "Press inclinado con mancuernas",
           "medida": "kg",
           "series": 4,
-          "reps": "8",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/42lU8xsumBo"
+          "reps": "6-8"
         },
         {
-          "id": "bulgaras",
-          "nombre": "Búlgaras",
+          "id": "jalon_prono",
+          "nombre": "Jalón en polea prono",
           "medida": "kg",
-          "series": 3,
-          "reps": "10 por pierna",
-          "rir": 2,
-          "video": "https://youtu.be/QE4Bc1t9Evs"
+          "series": 4,
+          "reps": "6-8"
         },
         {
-          "id": "hiperextensiones_45",
-          "nombre": "Hiperextensiones 45°",
+          "id": "press_militar_mancuernas",
+          "nombre": "Press militar con mancuernas",
           "medida": "kg",
           "series": 3,
-          "reps": "12",
-          "rir": 2
+          "reps": "8-10",
+          "video": "https://youtube.com/shorts/k6tzKisR3NY"
         },
         {
-          "id": "abduccion_maquina",
-          "nombre": "Abducción en máquina",
+          "id": "remo_maquina",
+          "nombre": "Remo en máquina",
           "medida": "kg",
           "series": 3,
-          "reps": "15",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/HJLzMM_naPg"
+          "reps": "8-10"
         },
         {
-          "id": "patada_gluteo_maquina",
-          "nombre": "Patada de glúteo en máquina",
+          "id": "vuelos_laterales",
+          "nombre": "Vuelos laterales",
           "medida": "kg",
           "series": 3,
-          "reps": "12 por pierna",
-          "rir": 2
+          "reps": "12-15",
+          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
+        },
+        {
+          "id": "superserie_curl_triceps_mancuernas",
+          "nombre": "Superserie: curl + tríceps con mancuernas",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Curl con mancuernas",
+              "series": 3,
+              "reps": "10"
+            },
+            {
+              "nombre": "Extensión de tríceps con mancuerna",
+              "series": 3,
+              "reps": "10"
+            }
+          ]
         }
       ]
     },
@@ -203,29 +223,15 @@
     {
       "id": "viernes",
       "nombre": "Viernes",
-      "subtitulo": "Superior",
+      "subtitulo": "Superior B",
       "tipo": "entreno",
       "ejercicios": [
-        {
-          "id": "press_inclinado_mancuernas",
-          "nombre": "Press inclinado con mancuernas",
-          "medida": "kg",
-          "series": 4,
-          "reps": "6-8"
-        },
-        {
-          "id": "jalon_prono",
-          "nombre": "Jalón en polea prono",
-          "medida": "kg",
-          "series": 4,
-          "reps": "8-10"
-        },
         {
           "id": "press_pecho_maquina",
           "nombre": "Press de pecho en máquina",
           "medida": "kg",
           "series": 3,
-          "reps": "10"
+          "reps": "10-12"
         },
         {
           "id": "remo_polea_baja",
@@ -235,19 +241,11 @@
           "reps": "10-12"
         },
         {
-          "id": "press_militar_mancuernas",
-          "nombre": "Press militar con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "8-10",
-          "video": "https://youtube.com/shorts/k6tzKisR3NY"
-        },
-        {
           "id": "vuelos_laterales",
           "nombre": "Vuelos laterales",
           "medida": "kg",
           "series": 3,
-          "reps": "12-15",
+          "reps": "15",
           "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
         },
         {
@@ -264,13 +262,13 @@
           "superset": [
             {
               "nombre": "Curl con mancuernas",
-              "series": 3,
-              "reps": "10"
+              "series": 2,
+              "reps": "12-15"
             },
             {
               "nombre": "Extensión de tríceps con mancuerna",
-              "series": 3,
-              "reps": "10"
+              "series": 2,
+              "reps": "12-15"
             }
           ]
         }
@@ -305,15 +303,22 @@
       "medida": "kg"
     },
     {
+      "id": "hip_thrust_barra",
+      "nombre": "Hip thrust con barra",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/42lU8xsumBo"
+    },
+    {
       "id": "prensa",
       "nombre": "Prensa",
       "medida": "kg",
       "video": "https://youtube.com/shorts/EotSw18oR9w"
     },
     {
-      "id": "extension_cuadriceps",
-      "nombre": "Extensión de cuádriceps",
-      "medida": "kg"
+      "id": "abduccion_maquina",
+      "nombre": "Abducción en máquina",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/HJLzMM_naPg"
     },
     {
       "id": "ab_wheel",
@@ -356,34 +361,6 @@
       "medida": "seg"
     },
     {
-      "id": "hip_thrust_barra",
-      "nombre": "Hip thrust con barra",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/42lU8xsumBo"
-    },
-    {
-      "id": "bulgaras",
-      "nombre": "Búlgaras",
-      "medida": "kg",
-      "video": "https://youtu.be/QE4Bc1t9Evs"
-    },
-    {
-      "id": "hiperextensiones_45",
-      "nombre": "Hiperextensiones 45°",
-      "medida": "kg"
-    },
-    {
-      "id": "abduccion_maquina",
-      "nombre": "Abducción en máquina",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/HJLzMM_naPg"
-    },
-    {
-      "id": "patada_gluteo_maquina",
-      "nombre": "Patada de glúteo en máquina",
-      "medida": "kg"
-    },
-    {
       "id": "press_inclinado_mancuernas",
       "nombre": "Press inclinado con mancuernas",
       "medida": "kg"
@@ -394,6 +371,23 @@
       "medida": "kg"
     },
     {
+      "id": "press_militar_mancuernas",
+      "nombre": "Press militar con mancuernas",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/k6tzKisR3NY"
+    },
+    {
+      "id": "remo_maquina",
+      "nombre": "Remo en máquina",
+      "medida": "kg"
+    },
+    {
+      "id": "vuelos_laterales",
+      "nombre": "Vuelos laterales",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
+    },
+    {
       "id": "press_pecho_maquina",
       "nombre": "Press de pecho en máquina",
       "medida": "kg"
@@ -402,18 +396,6 @@
       "id": "remo_polea_baja",
       "nombre": "Remo en polea baja",
       "medida": "kg"
-    },
-    {
-      "id": "press_militar_mancuernas",
-      "nombre": "Press militar con mancuernas",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/k6tzKisR3NY"
-    },
-    {
-      "id": "vuelos_laterales",
-      "nombre": "Vuelos laterales",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
     },
     {
       "id": "vuelos_posteriores",
@@ -428,6 +410,27 @@
     {
       "id": "extension_triceps_mancuerna",
       "nombre": "Extensión de tríceps con mancuerna",
+      "medida": "kg"
+    },
+    {
+      "id": "extension_cuadriceps",
+      "nombre": "Extensión de cuádriceps",
+      "medida": "kg"
+    },
+    {
+      "id": "bulgaras",
+      "nombre": "Búlgaras",
+      "medida": "kg",
+      "video": "https://youtu.be/QE4Bc1t9Evs"
+    },
+    {
+      "id": "hiperextensiones_45",
+      "nombre": "Hiperextensiones 45°",
+      "medida": "kg"
+    },
+    {
+      "id": "patada_gluteo_maquina",
+      "nombre": "Patada de glúteo en máquina",
       "medida": "kg"
     },
     {
@@ -447,11 +450,6 @@
       "nombre": "Hip thrust en máquina",
       "medida": "kg",
       "video": "https://youtube.com/shorts/m8g9VogoxMo"
-    },
-    {
-      "id": "remo_maquina",
-      "nombre": "Remo en máquina",
-      "medida": "kg"
     }
   ]
 }
