@@ -77,7 +77,7 @@
     {
       "id": "martes",
       "nombre": "Martes",
-      "subtitulo": "Calistenia",
+      "subtitulo": "Calistenia o caminata",
       "tipo": "entreno",
       "ejercicios": [
         {
@@ -124,6 +124,11 @@
           "series": 3,
           "reps": "20-30"
         }
+      ],
+      "caminataAlt": true,
+      "actividades": [
+        "Caminata",
+        "Fútbol"
       ]
     },
     {
@@ -183,7 +188,11 @@
       "nombre": "Jueves",
       "subtitulo": "Fútbol o caminata",
       "tipo": "cardio",
-      "ejercicios": []
+      "ejercicios": [],
+      "opciones": [
+        "Fútbol",
+        "Caminata"
+      ]
     },
     {
       "id": "viernes",
@@ -266,16 +275,12 @@
     {
       "id": "sabado",
       "nombre": "Sábado",
-      "subtitulo": "Fútbol o caminata",
+      "subtitulo": "Caminata",
       "tipo": "cardio",
-      "ejercicios": []
-    },
-    {
-      "id": "domingo",
-      "nombre": "Domingo",
-      "subtitulo": "Descanso",
-      "tipo": "descanso",
-      "ejercicios": []
+      "ejercicios": [],
+      "opciones": [
+        "Caminata"
+      ]
     }
   ],
   "catalogo": [

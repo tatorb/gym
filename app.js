@@ -485,14 +485,16 @@ function renderDays() {
     const card = document.createElement("button");
     card.className = `day-card day-${tipo}` + (hoy ? " day-due" : "");
     card.style.animationDelay = `${i * 60}ms`;
-    let badge, linea;
+    let badge, linea, subTexto = dia.subtitulo || "";
     if (tipo === "entreno") {
       const last = lastSessionDate(currentUser, dia.id);
       badge = ICONS.dumbbell;
       linea = `${dia.ejercicios.length} ejercicios · ${last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin registros"}`;
     } else if (tipo === "cardio") {
       const last = lastSessionDate(currentUser, dia.id);
-      badge = "⚽"; linea = "Fútbol o caminata" + (last !== null ? " · último " + fraseHace(daysAgoFrom(last)) : "");
+      badge = "🚶";
+      subTexto = opcionesDe(dia, currentUser).join(" o ");  // Gabi nunca ve "Fútbol"
+      linea = last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin marcar";
     } else {
       badge = "☾"; linea = "Descanso";
     }
@@ -500,12 +502,13 @@ function renderDays() {
       <div class="day-badge">${badge}</div>
       <div class="day-body">
         <span class="day-name">${dia.nombre}${hoy ? `<span class="due-badge">Hoy</span>` : ""}</span>
-        <span class="day-sub">${dia.subtitulo || ""}</span>
+        <span class="day-sub">${subTexto}</span>
         <span class="day-count">${linea}</span>
       </div>
       ${tipo === "entreno" ? `<div class="day-chevron">${ICONS.chevron}</div>` : ""}`;
-    if (tipo === "entreno") card.addEventListener("click", () => openDay(dia));
-    else if (tipo === "cardio") card.addEventListener("click", () => openCardioMarker(dia));
+    if (tipo === "entreno" && dia.caminataAlt) card.addEventListener("click", () => openEntrenoOActividad(dia));
+    else if (tipo === "entreno") card.addEventListener("click", () => openDay(dia));
+    else if (tipo === "cardio") card.addEventListener("click", () => openActividadChoice(dia));
     else card.addEventListener("click", () => toast("Día de descanso ☾"));
     cont.appendChild(card);
   });
@@ -1812,22 +1815,47 @@ function openCorpEdit(id) {
   o.querySelector("#ce-del").onclick = async () => { if (!confirm("¿Eliminar este registro?")) return; await DB.corpRemove(id); o.remove(); renderCorporal(); toast("Eliminado"); };
 }
 
-// Marcar un día de fútbol/caminata.
-function openCardioMarker(dia) {
+// Guarda un marcador de actividad (caminata / fútbol) para un día.
+async function marcarActividad(dia, nombre) {
+  await DB.save({ fecha: hoyISO(), usuario: currentUser, dia: dia.id, ejercicio: "cardio",
+    ejercicio_nombre: nombre, medida: "kg", kg: null, kg2: null, reps: null, rir: null, nota: "" });
+  renderDays(); toast(`¡Anotado! ${nombre}`);
+}
+// Opciones de actividad de un día para un usuario (el fútbol es solo de Tato).
+function opcionesDe(dia, user) {
+  return (dia.opciones || ["Caminata"]).filter(op => op !== "Fútbol" || user === "tato");
+}
+function actividadesDe(dia, user) {
+  return (dia.actividades || ["Caminata"]).filter(op => op !== "Fútbol" || user === "tato");
+}
+// Día con opciones de actividad (ej. Fútbol o caminata).
+function openActividadChoice(dia) {
   const hoy = hoyISO();
-  const yaHoy = DB.all().some(r => r.usuario === currentUser && r.fecha === hoy && r.dia === dia.id && r.ejercicio === "cardio");
+  const yaHoy = DB.all().find(r => r.usuario === currentUser && r.fecha === hoy && r.dia === dia.id && r.ejercicio === "cardio");
+  const ops = opcionesDe(dia, currentUser);
   const o = makeOverlay(`
     <div class="modal">
       <h3>${dia.nombre}</h3>
-      <div class="modal-sub">${yaHoy ? "Ya lo marcaste hoy ✅" : "¿Marcás que entrenaste o caminaste hoy?"}</div>
-      <button class="btn-primary" id="cm-ok">${yaHoy ? "Marcar otra vez" : "Marqué que entrené ⚽"}</button>
+      <div class="modal-sub">${yaHoy ? `Hoy marcaste: ${yaHoy.ejercicio_nombre} ✅` : "¿Qué hiciste hoy?"}</div>
+      ${ops.map((op, i) => `<button class="${i === 0 ? "btn-primary" : "btn-ghost"}" data-op="${op}" ${i ? 'style="margin-top:10px"' : ""}>${op}</button>`).join("")}
       <div class="modal-row"><button class="btn-ghost" data-close>Cerrar</button></div>
     </div>`);
-  o.querySelector("#cm-ok").onclick = async () => {
-    await DB.save({ fecha: hoy, usuario: currentUser, dia: dia.id, ejercicio: "cardio",
-      ejercicio_nombre: dia.subtitulo || "Fútbol o caminata", medida: "kg", kg: null, kg2: null, reps: null, rir: null, nota: "" });
-    o.remove(); renderDays(); toast("¡Anotado! ⚽");
-  };
+  o.querySelectorAll("[data-op]").forEach(b => b.onclick = async () => { await marcarActividad(dia, b.dataset.op); o.remove(); });
+}
+// Día de entreno que también permite otra actividad (ej. Calistenia o caminata/fútbol).
+function openEntrenoOActividad(dia) {
+  const acts = actividadesDe(dia, currentUser);
+  const entrenoLbl = (dia.subtitulo && dia.subtitulo.split(" ")[0]) || "Entrenar";
+  const o = makeOverlay(`
+    <div class="modal">
+      <h3>${dia.nombre}</h3>
+      <div class="modal-sub">¿Qué vas a hacer hoy?</div>
+      <button class="btn-primary" id="opt-entreno">${entrenoLbl}</button>
+      ${acts.map(a => `<button class="btn-ghost" data-op="${a}" style="margin-top:10px">${a}</button>`).join("")}
+      <div class="modal-row"><button class="btn-ghost" data-close>Cerrar</button></div>
+    </div>`);
+  o.querySelector("#opt-entreno").onclick = () => { o.remove(); openDay(dia); };
+  o.querySelectorAll("[data-op]").forEach(b => b.onclick = async () => { await marcarActividad(dia, b.dataset.op); o.remove(); });
 }
 
 // ================== PASO 5 — SUGERENCIA NUTRICIONAL (sin IA) ==================
