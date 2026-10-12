@@ -1,0 +1,37 @@
+﻿usuario,ejercicio_old,nombre_viejo,ejercicio_nuevo,tipo
+tato,d1_back_squat,Back squat,back_squat,compartido
+tato,d1_prensa,Prensa,prensa,compartido
+tato,d1_jalon_prono,Jalón en polea prono,jalon_prono,compartido
+tato,d1_remo_maquina,Remo en máquina,remo_maquina,compartido
+tato,d1_quinto,Curl femoral,curl_femoral,variante
+tato,d1_sexto,Press inclinado con mancuernas,press_inclinado_mancuernas,variante
+tato,d2_hip_thrust_barra,Hip thrust con barra,hip_thrust_barra,compartido
+tato,d2_press_militar_mancuernas,Press militar con mancuernas,press_militar_mancuernas,compartido
+tato,d2_vuelos_laterales,Vuelos laterales,vuelos_laterales,compartido
+tato,d2_remo_polea_baja,Remo en polea baja,remo_polea_baja,compartido
+tato,d2_superserie_biceps_triceps,Superserie: curl bíceps + tríceps en polea,superserie_curl_triceps_polea,historico-superserie
+tato,d2_sexto,Plancha lateral,plancha_lateral,variante
+tato,d3_estocadas_bulgaras,Estocadas o búlgaras livianas,bulgaras,compartido
+tato,d3_jalon_o_remo,Jalón o remo en máquina,jalon_prono,compartido-merge
+tato,d3_press_pecho_maquina,Press de pecho en máquina,press_pecho_maquina,compartido
+tato,d3_ab_wheel,Ab wheel,ab_wheel,compartido
+tato,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_extension,historico-superserie
+tato,d3_sexto,Vuelos posteriores en máquina,vuelos_posteriores,variante
+gabi,d1_back_squat,Back squat,back_squat,compartido
+gabi,d1_prensa,Prensa,prensa,compartido
+gabi,d1_jalon_prono,Jalón en polea prono,jalon_prono,compartido
+gabi,d1_remo_maquina,Remo en máquina,remo_maquina,compartido
+gabi,d1_quinto,Hip thrust en máquina,hip_thrust_maquina,variante
+gabi,d1_sexto,Abducción en máquina,abduccion_maquina,variante
+gabi,d2_hip_thrust_barra,Hip thrust con barra,hip_thrust_barra,compartido
+gabi,d2_press_militar_mancuernas,Press militar con mancuernas,press_militar_mancuernas,compartido
+gabi,d2_vuelos_laterales,Vuelos laterales,vuelos_laterales,compartido
+gabi,d2_remo_polea_baja,Remo en polea baja,remo_polea_baja,compartido
+gabi,d2_superserie_biceps_triceps,Superserie: curl bíceps + tríceps en polea,superserie_curl_triceps_polea,historico-superserie
+gabi,d2_sexto,Peso muerto rumano con mancuernas,peso_muerto_rumano_mancuernas,variante
+gabi,d3_estocadas_bulgaras,Estocadas o búlgaras livianas,bulgaras,compartido
+gabi,d3_jalon_o_remo,Jalón o remo en máquina,jalon_prono,compartido-merge
+gabi,d3_press_pecho_maquina,Press de pecho en máquina,press_pecho_maquina,compartido
+gabi,d3_ab_wheel,Ab wheel,ab_wheel,compartido
+gabi,d3_superserie_biceps_triceps,Superserie: curl bíceps + extensión tríceps,superserie_curl_triceps_extension,historico-superserie
+gabi,d3_sexto,Frog pump,frog_pump,variante
