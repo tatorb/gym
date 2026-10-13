@@ -93,8 +93,12 @@ function resolveExercise(ex, user) {
     superset: ss ? ss.map(m => m.nombre) : null,   // nombres para el formulario
     supersetDetalle: ss,                           // series/reps por movimiento
     repsVar: !ss && /\d\s*-\s*\d/.test(String(base.reps || "")),
-    prescrito: user === "tato",                    // Tato: con objetivos; Gabi: libre
+    prescrito: true,                               // ahora los dos tienen series/reps/RIR
   };
+}
+// Lista de ejercicios de un día para un usuario (Gabi puede tener su propia lista).
+function listaDe(dia, user) {
+  return (user === "gabi" && Array.isArray(dia.ejerciciosGabi)) ? dia.ejerciciosGabi : (dia.ejercicios || []);
 }
 function objetivo(ex) {
   if (ex.supersetDetalle) return ex.supersetDetalle.map(m => `${m.series}×${m.reps}`).join(" + ");
@@ -492,7 +496,7 @@ function renderDays() {
     if (tipo === "entreno") {
       const last = lastSessionDate(currentUser, dia.id);
       badge = ICONS.dumbbell;
-      linea = `${dia.ejercicios.length} ejercicios · ${last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin registros"}`;
+      linea = `${listaDe(dia, currentUser).length} ejercicios · ${last !== null ? "último " + fraseHace(daysAgoFrom(last)) : "sin registros"}`;
     } else if (tipo === "cardio") {
       const last = lastSessionDate(currentUser, dia.id);
       badge = "🚶";
@@ -520,7 +524,7 @@ function renderDays() {
 // ---------------- Abrir un día ----------------
 function openDay(dia) {
   currentDay = dia;
-  exercises = dia.ejercicios.map(ex => resolveExercise(ex, currentUser));
+  exercises = listaDe(dia, currentUser).map(ex => resolveExercise(ex, currentUser));
   currentIndex = 0;
   $("#ex-day-name").textContent = `${dia.nombre} · ${dia.subtitulo || ""}`;
   renderBlockBanner();
@@ -537,7 +541,7 @@ function openDay(dia) {
 function renderBlockBanner() {
   const el = $("#block-banner");
   if (!el) return;
-  const b = currentUser === "tato" ? bloqueActual() : null;
+  const b = bloqueActual();   // el bloque de 5 semanas aplica a los dos
   if (!b) { el.classList.add("hidden"); el.innerHTML = ""; return; }
   el.classList.remove("hidden");
   el.innerHTML = `<span class="bb-week">S${b.n}</span><span class="bb-text">${b.texto}</span>`;
@@ -570,7 +574,7 @@ function switchUserSameExercise(user) {
   DB.setLastUser(user);
   document.body.dataset.user = user;
   $("#days-user-name").textContent = PLAN.usuarios[user]?.nombre || user;
-  exercises = currentDay.ejercicios.map(ex => resolveExercise(ex, user));
+  exercises = listaDe(currentDay, user).map(ex => resolveExercise(ex, user));
   currentIndex = Math.min(idx, exercises.length - 1);
   renderExercises();
   renderDots();
@@ -1260,7 +1264,7 @@ function fmtVol(v) { return Math.round(v).toLocaleString("es-AR"); }
 
 function planLookup(exId, user) {
   for (const d of PLAN.dias) {
-    const ex = d.ejercicios.find(e => e.id === exId);
+    const ex = listaDe(d, user).find(e => e.id === exId);
     if (ex) return resolveExercise(ex, user);
   }
   return null;
@@ -1477,7 +1481,7 @@ function renderPorDia() {
   const line = serie.map(s => ({ label: s.label, value: s.value }));
   let breakdown = "";
   if (serie.length) {
-    breakdown = dia.ejercicios.map(exDef => {
+    breakdown = listaDe(dia, currentUser).map(exDef => {
       const ex = resolveExercise(exDef, currentUser);
       const s = exerciseSeries(currentUser, ex.id).map(r => exercisePrimary(r).value);
       const last = s.length ? s[s.length - 1] : null;
@@ -1501,9 +1505,9 @@ function renderPorDia() {
 }
 
 function renderPorEjercicio() {
-  const options = PLAN.dias.filter(d => d.ejercicios && d.ejercicios.length).map(d =>
+  const options = PLAN.dias.filter(d => listaDe(d, currentUser).length).map(d =>
     `<optgroup label="${d.nombre}">` +
-    d.ejercicios.map(exDef => {
+    listaDe(d, currentUser).map(exDef => {
       const ex = resolveExercise(exDef, currentUser);
       if (!metricsEx) metricsEx = ex.id;
       return `<option value="${ex.id}" ${ex.id === metricsEx ? "selected" : ""}>${ex.nombre}</option>`;

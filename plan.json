@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Plan. Tato: series/reps/RIR + bloque 5 semanas. Gabi: misma lista SIN objetivos (variante dead bug). IDs por nombre; vuelos_laterales y la superserie de mancuernas comparten ID en miércoles y viernes.",
+  "_ayuda": "Tato y Gabi tienen cada uno su plan (ejercicios + series/reps/RIR). Gabi NO tiene cargas sugeridas. IDs por nombre; se comparten entre los dos donde el ejercicio es el mismo.",
   "usuarios": {
     "tato": {
       "nombre": "Tato",
@@ -79,14 +79,68 @@
           "nombre": "Ab wheel",
           "medida": "reps",
           "series": 3,
-          "reps": "10-14",
-          "variantes": {
-            "gabi": {
-              "id": "dead_bug",
-              "nombre": "Dead bug",
-              "medida": "reps"
-            }
-          }
+          "reps": "10-14"
+        }
+      ],
+      "ejerciciosGabi": [
+        {
+          "id": "plancha_frontal",
+          "nombre": "Plancha frontal",
+          "medida": "seg",
+          "series": 2,
+          "reps": "40"
+        },
+        {
+          "id": "hip_thrust_barra",
+          "nombre": "Hip thrust con barra",
+          "medida": "kg",
+          "series": 4,
+          "reps": "10-12",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/42lU8xsumBo"
+        },
+        {
+          "id": "back_squat",
+          "nombre": "Back squat",
+          "medida": "kg",
+          "series": 3,
+          "reps": "8-10",
+          "rir": 2
+        },
+        {
+          "id": "prensa",
+          "nombre": "Prensa",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/EotSw18oR9w"
+        },
+        {
+          "id": "peso_muerto_rumano_mancuernas",
+          "nombre": "RDL con mancuernas",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10-12",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/VB6Wu90UHZA"
+        },
+        {
+          "id": "abduccion_maquina",
+          "nombre": "Abducción en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "15-20",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/HJLzMM_naPg"
+        },
+        {
+          "id": "dead_bug",
+          "nombre": "Dead bug",
+          "medida": "reps",
+          "series": 3,
+          "reps": "10 por lado",
+          "rir": 2
         }
       ]
     },
@@ -144,6 +198,56 @@
           "medida": "seg",
           "series": 3,
           "reps": "20-30"
+        }
+      ],
+      "ejerciciosGabi": [
+        {
+          "id": "dominadas_asistidas",
+          "nombre": "Dominadas asistidas",
+          "medida": "reps",
+          "series": 3,
+          "reps": "6-8",
+          "rir": "2-3"
+        },
+        {
+          "id": "remo_invertido",
+          "nombre": "Remo invertido",
+          "medida": "reps",
+          "series": 3,
+          "reps": "8-12",
+          "rir": "2-3"
+        },
+        {
+          "id": "flexiones_banco",
+          "nombre": "Flexiones con manos en banco",
+          "medida": "reps",
+          "series": 3,
+          "reps": "8-12",
+          "rir": "2-3"
+        },
+        {
+          "id": "bulgaras",
+          "nombre": "Búlgaras",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10-12 por pierna",
+          "rir": "2-3",
+          "video": "https://youtu.be/QE4Bc1t9Evs"
+        },
+        {
+          "id": "puente_gluteo_una_pierna",
+          "nombre": "Puente de glúteo a una pierna",
+          "medida": "reps",
+          "series": 3,
+          "reps": "12",
+          "rir": "2-3"
+        },
+        {
+          "id": "plancha_lateral",
+          "nombre": "Plancha lateral",
+          "medida": "seg",
+          "series": 3,
+          "reps": "25"
         }
       ]
     },
@@ -204,6 +308,67 @@
               "nombre": "Extensión de tríceps con mancuerna",
               "series": 3,
               "reps": "10"
+            }
+          ]
+        }
+      ],
+      "ejerciciosGabi": [
+        {
+          "id": "press_inclinado_mancuernas",
+          "nombre": "Press inclinado con mancuernas",
+          "medida": "kg",
+          "series": 3,
+          "reps": "8-10",
+          "rir": 2
+        },
+        {
+          "id": "jalon_prono",
+          "nombre": "Jalón en polea prono",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8-10",
+          "rir": 2
+        },
+        {
+          "id": "press_militar_mancuernas",
+          "nombre": "Press militar con mancuernas",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10-12",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/k6tzKisR3NY"
+        },
+        {
+          "id": "remo_maquina",
+          "nombre": "Remo en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10-12",
+          "rir": 2
+        },
+        {
+          "id": "vuelos_laterales",
+          "nombre": "Vuelos laterales",
+          "medida": "kg",
+          "series": 3,
+          "reps": "15-20",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
+        },
+        {
+          "id": "superserie_curl_triceps_mancuernas",
+          "nombre": "Superserie: curl + tríceps con mancuernas",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Curl con mancuernas",
+              "series": 3,
+              "reps": "12"
+            },
+            {
+              "nombre": "Extensión de tríceps con mancuerna",
+              "series": 3,
+              "reps": "12"
             }
           ]
         }
@@ -272,6 +437,67 @@
             }
           ]
         }
+      ],
+      "ejerciciosGabi": [
+        {
+          "id": "press_pecho_maquina",
+          "nombre": "Press de pecho en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15",
+          "rir": 2
+        },
+        {
+          "id": "remo_polea_baja",
+          "nombre": "Remo en polea baja",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15",
+          "rir": 2
+        },
+        {
+          "id": "hip_thrust_maquina",
+          "nombre": "Hip thrust en máquina",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/m8g9VogoxMo"
+        },
+        {
+          "id": "vuelos_laterales",
+          "nombre": "Vuelos laterales",
+          "medida": "kg",
+          "series": 3,
+          "reps": "15-20",
+          "rir": 2,
+          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
+        },
+        {
+          "id": "vuelos_posteriores",
+          "nombre": "Vuelos posteriores en máquina",
+          "medida": "kg",
+          "series": 2,
+          "reps": "15-20",
+          "rir": 2
+        },
+        {
+          "id": "superserie_curl_triceps_mancuernas",
+          "nombre": "Superserie: curl + tríceps con mancuernas",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Curl con mancuernas",
+              "series": 2,
+              "reps": "15"
+            },
+            {
+              "nombre": "Extensión de tríceps con mancuerna",
+              "series": 2,
+              "reps": "15"
+            }
+          ]
+        }
       ]
     },
     {
@@ -331,8 +557,19 @@
       "medida": "reps"
     },
     {
+      "id": "peso_muerto_rumano_mancuernas",
+      "nombre": "RDL con mancuernas",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/VB6Wu90UHZA"
+    },
+    {
       "id": "dominadas",
       "nombre": "Dominadas",
+      "medida": "reps"
+    },
+    {
+      "id": "dominadas_asistidas",
+      "nombre": "Dominadas asistidas",
       "medida": "reps"
     },
     {
@@ -348,6 +585,22 @@
     {
       "id": "flexiones",
       "nombre": "Flexiones",
+      "medida": "reps"
+    },
+    {
+      "id": "flexiones_banco",
+      "nombre": "Flexiones con manos en banco",
+      "medida": "reps"
+    },
+    {
+      "id": "bulgaras",
+      "nombre": "Búlgaras",
+      "medida": "kg",
+      "video": "https://youtu.be/QE4Bc1t9Evs"
+    },
+    {
+      "id": "puente_gluteo_una_pierna",
+      "nombre": "Puente de glúteo a una pierna",
       "medida": "reps"
     },
     {
@@ -403,25 +656,15 @@
       "medida": "kg"
     },
     {
-      "id": "curl_mancuernas",
-      "nombre": "Curl con mancuernas",
-      "medida": "kg"
-    },
-    {
-      "id": "extension_triceps_mancuerna",
-      "nombre": "Extensión de tríceps con mancuerna",
-      "medida": "kg"
+      "id": "hip_thrust_maquina",
+      "nombre": "Hip thrust en máquina",
+      "medida": "kg",
+      "video": "https://youtube.com/shorts/m8g9VogoxMo"
     },
     {
       "id": "extension_cuadriceps",
       "nombre": "Extensión de cuádriceps",
       "medida": "kg"
-    },
-    {
-      "id": "bulgaras",
-      "nombre": "Búlgaras",
-      "medida": "kg",
-      "video": "https://youtu.be/QE4Bc1t9Evs"
     },
     {
       "id": "hiperextensiones_45",
@@ -438,18 +681,6 @@
       "nombre": "Frog pump",
       "medida": "reps",
       "video": "https://youtu.be/4M_-vB5SXXE"
-    },
-    {
-      "id": "peso_muerto_rumano_mancuernas",
-      "nombre": "Peso muerto rumano con mancuernas",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/VB6Wu90UHZA"
-    },
-    {
-      "id": "hip_thrust_maquina",
-      "nombre": "Hip thrust en máquina",
-      "medida": "kg",
-      "video": "https://youtube.com/shorts/m8g9VogoxMo"
     }
   ]
 }
