@@ -1745,10 +1745,45 @@ function openCorporal() {
   showScreen("corporal");
   DB.corpRefresh().then(ok => { if (ok) renderCorporal(); });
 }
+// Gráfico con varias líneas (cintura + cadera) en escala de fechas compartida.
+function svgMultiLine(series, opts = {}) {
+  const all = series.flatMap(s => s.puntos);
+  if (!all.length) return CHART_EMPTY;
+  const W = 320, H = opts.height || 150, padL = 10, padR = 10, padT = 20, padB = 24;
+  const vals = all.map(p => p.value);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { max += 1; min = Math.max(0, min - 1); }
+  const fechas = all.map(p => p.fecha).sort();
+  const minF = fechas[0], maxF = fechas[fechas.length - 1];
+  const tmin = Date.parse(minF + "T00:00:00"), tmax = Date.parse(maxF + "T00:00:00");
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const X = iso => padL + (tmax === tmin ? iw / 2 : iw * (Date.parse(iso + "T00:00:00") - tmin) / (tmax - tmin));
+  const Y = v => padT + ih * (1 - (v - min) / (max - min));
+  const fmt = opts.format || (v => String(Math.round(v)));
+  let g = "";
+  series.forEach(s => {
+    const ps = s.puntos.slice().sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    if (!ps.length) return;
+    const pts = ps.map(p => [X(p.fecha), Y(p.value)]);
+    g += `<path d="${pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    g += pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.8" fill="${s.color}"/>`).join("");
+    const lp = pts[pts.length - 1];
+    g += `<text x="${lp[0].toFixed(1)}" y="${(lp[1] - 7).toFixed(1)}" class="cval" text-anchor="end" fill="${s.color}">${fmt(ps[ps.length - 1].value)}</text>`;
+  });
+  const leg = series.map((s, i) => `<g transform="translate(${padL + i * 96}, 10)"><rect x="0" y="-7" width="11" height="4" rx="2" fill="${s.color}"/><text x="15" y="-3" class="cxlabel" fill="${s.color}">${s.nombre}</text></g>`).join("");
+  const dates = `<text x="${padL}" y="${H - 3}" class="cxlabel">${fechaCorta(minF)}</text><text x="${(W - padR).toFixed(0)}" y="${H - 3}" class="cxlabel" text-anchor="end">${fechaCorta(maxF)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">${g}${leg}${dates}</svg>`;
+}
+// Días desde la última medición de cintura o cadera (Infinity si nunca).
+function diasDesdeMedida(user) {
+  const h = DB.corpHistory(user).filter(r => r.cintura != null || r.cadera != null);
+  return h.length ? daysAgoFrom(h[0].fecha) : Infinity;
+}
 function corpRow(r) {
   const partes = [];
   if (r.peso != null) partes.push(`${r.peso} kg`);
-  if (r.cintura != null) partes.push(`${r.cintura} cm`);
+  if (r.cintura != null) partes.push(`${r.cintura} cm cint.`);
+  if (r.cadera != null) partes.push(`${r.cadera} cm cad.`);
   if (r.sueno != null) partes.push(`😴 ${r.sueno}`);
   return `<button class="hist-row" data-corp-edit="${r.id}" type="button">
     <span class="hist-date">${fechaCorta(r.fecha)}</span>
@@ -1761,9 +1796,16 @@ function renderCorporal() {
   const hist = DB.corpHistory(currentUser);
   const asc = hist.slice().reverse();
   const pesoSerie = asc.filter(r => r.peso != null).map(r => ({ label: r.fecha, value: Number(r.peso) }));
-  const cintSerie = asc.filter(r => r.cintura != null).map(r => ({ label: r.fecha, value: Number(r.cintura) }));
+  const cintPts = asc.filter(r => r.cintura != null).map(r => ({ fecha: r.fecha, value: Number(r.cintura) }));
+  const cadPts = asc.filter(r => r.cadera != null).map(r => ({ fecha: r.fecha, value: Number(r.cadera) }));
   const fmt1 = v => (Math.round(v * 10) / 10).toString();
+  const aviso = diasDesdeMedida(currentUser) > 14 ? `<div class="corp-aviso">📏 Toca medir cintura y cadera</div>` : "";
+  const chartCC = (cintPts.length + cadPts.length) >= 2 ? `<div class="metric-card"><div class="metric-title">Evolución de cintura y cadera (cm)</div>${svgMultiLine([
+    { nombre: "Cintura", color: "var(--accent)", puntos: cintPts },
+    { nombre: "Cadera", color: "var(--text-dim)", puntos: cadPts },
+  ], { format: fmt1 })}</div>` : "";
   body.innerHTML = `
+    ${aviso}
     <div class="corp-form">
       <div class="input-row">
         <div class="field full"><label>Fecha</label>
@@ -1772,15 +1814,21 @@ function renderCorporal() {
       <div class="input-row">
         <div class="field"><label>Peso (kg)</label>
           <input type="number" inputmode="decimal" step="0.1" id="corp-peso" placeholder="—"></div>
-        <div class="field"><label>Cintura (cm)</label>
-          <input type="number" inputmode="decimal" step="0.1" id="corp-cintura" placeholder="ombligo"></div>
         <div class="field"><label>Sueño (1-10)</label>
           <input type="number" inputmode="numeric" step="1" min="1" max="10" id="corp-sueno" placeholder="—"></div>
+      </div>
+      <div class="input-row">
+        <div class="field"><label>Cintura (cm)</label>
+          <input type="number" inputmode="decimal" step="0.1" id="corp-cintura" placeholder="—">
+          <span class="field-hint">a la altura del ombligo</span></div>
+        <div class="field"><label>Cadera (cm)</label>
+          <input type="number" inputmode="decimal" step="0.1" id="corp-cadera" placeholder="—">
+          <span class="field-hint">en la parte más ancha</span></div>
       </div>
       <button class="btn-save" id="corp-save">Guardar</button>
     </div>
     ${pesoSerie.length >= 2 ? `<div class="metric-card"><div class="metric-title">Evolución del peso (kg)</div>${svgLine(pesoSerie, { format: fmt1 })}</div>` : ""}
-    ${cintSerie.length >= 2 ? `<div class="metric-card"><div class="metric-title">Evolución de la cintura (cm)</div>${svgLine(cintSerie, { format: fmt1 })}</div>` : ""}
+    ${chartCC}
     <div class="section-label">Historial</div>
     ${hist.length ? `<div class="corp-list">${hist.map(corpRow).join("")}</div>` : `<div class="history-empty">Todavía no cargaste nada. 💪</div>`}`;
   $("#corp-save").onclick = saveCorporal;
@@ -1789,11 +1837,11 @@ function renderCorporal() {
 function readCorpForm(prefix) {
   const g = id => (document.getElementById(id)?.value || "").trim();
   const n = v => v === "" ? null : Number(v);
-  return { fecha: g(prefix + "fecha") || hoyISO(), peso: n(g(prefix + "peso")), cintura: n(g(prefix + "cintura")), sueno: n(g(prefix + "sueno")) };
+  return { fecha: g(prefix + "fecha") || hoyISO(), peso: n(g(prefix + "peso")), cintura: n(g(prefix + "cintura")), cadera: n(g(prefix + "cadera")), sueno: n(g(prefix + "sueno")) };
 }
 async function saveCorporal() {
   const f = readCorpForm("corp-");
-  if (f.peso == null && f.cintura == null && f.sueno == null) { toast("Cargá al menos un dato."); return; }
+  if (f.peso == null && f.cintura == null && f.cadera == null && f.sueno == null) { toast("Cargá al menos un dato."); return; }
   await DB.corpSave({ usuario: currentUser, ...f });
   toast("Guardado 📏");
   renderCorporal();
@@ -1809,8 +1857,11 @@ function openCorpEdit(id) {
         <input type="date" id="ce-fecha" value="${r.fecha}"></div></div>
       <div class="input-row">
         <div class="field"><label>Peso (kg)</label><input type="number" step="0.1" id="ce-peso" value="${r.peso ?? ""}"></div>
-        <div class="field"><label>Cintura (cm)</label><input type="number" step="0.1" id="ce-cintura" value="${r.cintura ?? ""}"></div>
         <div class="field"><label>Sueño</label><input type="number" step="1" min="1" max="10" id="ce-sueno" value="${r.sueno ?? ""}"></div>
+      </div>
+      <div class="input-row">
+        <div class="field"><label>Cintura (cm)</label><input type="number" step="0.1" id="ce-cintura" value="${r.cintura ?? ""}"></div>
+        <div class="field"><label>Cadera (cm)</label><input type="number" step="0.1" id="ce-cadera" value="${r.cadera ?? ""}"></div>
       </div>
       <button class="btn-save" id="ce-save">Guardar cambios</button>
       <div class="modal-row">
@@ -1869,8 +1920,12 @@ function openEntrenoOActividad(dia) {
 // Datos físicos fijos (altura en cm, edad en años).
 const PERFIL_FISICO = {
   tato: { sexo: "h", altura: 191, edad: 38, objetivo: "Recomposición", factorCal: 0.97, prot: 2.0, grasa: 0.9, legumbres: true },
-  gabi: { sexo: "m", altura: 175, edad: 38, objetivo: "Mantenimiento", factorCal: 1.00, prot: 1.9, grasa: 1.0, legumbres: false },
+  gabi: { sexo: "m", altura: 175, edad: 38, objetivo: "Marcar", marcar: true, factorCal: 1.00, prot: 1.7, grasa: 0.8, legumbres: false },
 };
+// "Recorte chico" de Gabi: resta 150 kcal al mantenimiento. Siempre manual, nunca automático.
+const LS_RECORTE_GABI = "gym_recorte_gabi";
+function recorteGabiOn() { try { return localStorage.getItem(LS_RECORTE_GABI) === "1"; } catch (e) { return false; } }
+function setRecorteGabi(on) { try { localStorage.setItem(LS_RECORTE_GABI, on ? "1" : "0"); } catch (e) {} }
 const COMIDAS = [
   { n: "Pechuga de pollo (150 g)", p: 33 },
   { n: "Carne magra — nalga/cuadrada (150 g)", p: 30 },
@@ -1916,24 +1971,31 @@ function calcNutricion(user) {
   const peso = Number(ultima.peso);
   const bmr = 10 * peso + 6.25 * pf.altura - 5 * pf.edad + (pf.sexo === "h" ? 5 : -161);
   const tdee = bmr * 1.55;
-  let base = tdee * pf.factorCal;
-  const aj = ajusteQuincenal(user);
-  let final = base + aj.kcal;
-  let notaGabi = "";
-  if (user === "gabi" && final < tdee) { final = tdee; notaGabi = " Para Gabi no sugerimos déficit: mantenemos en mantenimiento."; }
   const r10 = x => Math.round(x / 10) * 10;
   const protG = Math.round(pf.prot * peso), grasaG = Math.round(pf.grasa * peso);
-  const carbKcal = Math.max(0, final - protG * 4 - grasaG * 9);
-  const carbG = Math.round(carbKcal / 4);
-  const efectivo = Math.round((final - base) / 10) * 10; // ajuste real aplicado
-  return {
-    pf, peso, fecha: ultima.fecha,
-    tdee: r10(tdee), calorias: r10(final), efectivo,
-    protG, grasaG, carbG,
-    protKcal: protG * 4, grasaKcal: grasaG * 9, carbKcal: Math.round(carbKcal),
+  const base = {
+    pf, peso, fecha: ultima.fecha, tdee: r10(tdee),
+    protG, grasaG, protKcal: protG * 4, grasaKcal: grasaG * 9,
     aguaBaja: (35 * peso / 1000).toFixed(1), aguaAlta: (45 * peso / 1000).toFixed(1),
-    ajuste: aj, notaGabi,
   };
+
+  // --- Rama Gabi (objetivo "marcar"): mantenimiento, nunca superávit. Recorte chico opcional y manual (-150). ---
+  if (pf.marcar) {
+    const recorte = recorteGabiOn();
+    const final = recorte ? tdee - 150 : tdee;        // como máximo -150, nunca por encima del mantenimiento
+    const carbKcal = Math.max(0, final - protG * 4 - grasaG * 9);
+    return { ...base, marcar: true, recorte, calorias: r10(final), efectivo: recorte ? -150 : 0,
+      carbG: Math.round(carbKcal / 4), carbKcal: Math.round(carbKcal) };
+  }
+
+  // --- Rama Tato (sin cambios): factor + ajuste quincenal automático. ---
+  const baseCal = tdee * pf.factorCal;
+  const aj = ajusteQuincenal(user);
+  const final = baseCal + aj.kcal;
+  const carbKcal = Math.max(0, final - protG * 4 - grasaG * 9);
+  const efectivo = Math.round((final - baseCal) / 10) * 10; // ajuste real aplicado
+  return { ...base, calorias: r10(final), efectivo,
+    carbG: Math.round(carbKcal / 4), carbKcal: Math.round(carbKcal), ajuste: aj };
 }
 function openNutricion() { renderNutricion(); showScreen("nutricion"); DB.corpRefresh().then(ok => { if (ok) renderNutricion(); }); }
 function renderNutricion() {
@@ -1946,6 +2008,45 @@ function renderNutricion() {
     return;
   }
   const comidas = COMIDAS.filter(c => !c.legumbre || d.pf.legumbres);
+  const proteCard = `
+    <div class="section-label">Para llegar a ~${d.protG} g de proteína</div>
+    <div class="metric-card">
+      <div class="nut-sub">Combiná 3-4 de estas opciones en el día:</div>
+      ${comidas.map(c => `<div class="mini-row"><span class="mini-name">${c.n}</span><span class="mini-val">${c.p} g</span></div>`).join("")}
+    </div>`;
+
+  // --- Gabi: objetivo "marcar", con interruptor manual "Recorte chico". ---
+  if (d.marcar) {
+    body.innerHTML = `
+      <div class="metric-card">
+        <div class="metric-title">${nombre} · Marcar</div>
+        <div class="metric-sub" style="text-align:left;margin-top:0">Peso usado: ${d.peso} kg (${fechaCorta(d.fecha)}) · Mantenimiento ≈ ${d.tdee} kcal</div>
+      </div>
+      <div class="metric-card">
+        <div class="nut-note"><b>Objetivo: marcar.</b> Comer lo que gastás, proteína alta.</div>
+      </div>
+      ${statTiles([{ v: d.calorias, l: "kcal / día" }, { v: d.protG + " g", l: "Proteína" }])}
+      ${statTiles([{ v: d.grasaG + " g", l: "Grasas" }, { v: d.carbG + " g", l: "Carbohidratos" }])}
+      <div class="metric-card">
+        <div class="metric-title">Agua</div>
+        <div class="metric-sub" style="text-align:left;margin-top:0">${d.aguaBaja} – ${d.aguaAlta} litros por día</div>
+      </div>
+      <div class="metric-card">
+        <div class="nut-note">💡 En los días de gimnasio, priorizá los carbohidratos: te dan energía para entrenar.</div>
+      </div>
+      <div class="metric-card">
+        <label class="toggle-row" for="nut-recorte">
+          <span><b>Recorte chico</b><br><span class="field-hint">Resta 150 kcal al mantenimiento. Se activa a mano, nunca solo.</span></span>
+          <input type="checkbox" id="nut-recorte" ${d.recorte ? "checked" : ""}>
+        </label>
+        <div class="metric-sub" style="text-align:left;margin-top:8px">${d.recorte ? "Activado: −150 kcal sobre el mantenimiento." : "Desactivado: comés tu mantenimiento completo."}</div>
+      </div>
+      ${proteCard}`;
+    const chk = $("#nut-recorte");
+    if (chk) chk.onchange = (e) => { setRecorteGabi(e.target.checked); renderNutricion(); };
+    return;
+  }
+
   const signo = d.efectivo > 0 ? "+" : "";
   body.innerHTML = `
     <div class="metric-card">
@@ -1960,7 +2061,7 @@ function renderNutricion() {
     </div>
     <div class="metric-card">
       <div class="metric-title">Ajuste quincenal ${d.efectivo !== 0 ? `(${signo}${d.efectivo} kcal)` : "(sin cambios)"}</div>
-      <div class="metric-sub" style="text-align:left;margin-top:0">${d.ajuste.motivo}${d.notaGabi}</div>
+      <div class="metric-sub" style="text-align:left;margin-top:0">${d.ajuste.motivo}</div>
     </div>
     <div class="section-label">Para llegar a ~${d.protG} g de proteína</div>
     <div class="metric-card">

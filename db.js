@@ -380,12 +380,24 @@ export const DB = {
     if (corpOutbox.length === 0) return;
     const c = await getClient();
     if (!c) return;
+    // Si la columna 'cadera' todavía no existe en Supabase, mandamos el dato
+    // sin esa columna (se queda local) para no frenar el resto de la sincronización.
+    const sinCadera = obj => { const { cadera, ...resto } = obj || {}; return resto; };
+    const esColumnaFaltante = e => /cadera/i.test((e && (e.message + " " + (e.details || ""))) || "");
     while (corpOutbox.length) {
       const op = corpOutbox[0];
       let error = null;
-      if (op.op === "insert") { const { error: e } = await c.from("corporal").insert(op.row); error = (e && e.code !== "23505") ? e : null; }
-      else if (op.op === "update") { const { error: e } = await c.from("corporal").update(op.fields).eq("id", op.id); error = e; }
-      else if (op.op === "delete") { const { error: e } = await c.from("corporal").delete().eq("id", op.id); error = e; }
+      if (op.op === "insert") {
+        let { error: e } = await c.from("corporal").insert(op.row);
+        if (e && e.code !== "23505" && esColumnaFaltante(e)) { ({ error: e } = await c.from("corporal").insert(sinCadera(op.row))); }
+        error = (e && e.code !== "23505") ? e : null;
+      } else if (op.op === "update") {
+        let { error: e } = await c.from("corporal").update(op.fields).eq("id", op.id);
+        if (e && esColumnaFaltante(e)) { ({ error: e } = await c.from("corporal").update(sinCadera(op.fields)).eq("id", op.id)); }
+        error = e;
+      } else if (op.op === "delete") {
+        const { error: e } = await c.from("corporal").delete().eq("id", op.id); error = e;
+      }
       if (error) { setStatus("error", { message: error.message }); return; }
       corpOutbox.shift(); store(LS_CORP_OB, corpOutbox);
     }

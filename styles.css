@@ -730,6 +730,33 @@ body[data-user] {
 .corp-form { display: flex; flex-direction: column; gap: 12px; }
 .corp-list { display: flex; flex-direction: column; gap: 8px; }
 .nut-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 10px; }
+.nut-note { color: var(--text-dim); font-size: 13px; line-height: 1.4; text-align: left; }
+
+/* Ayuda chica debajo de un campo (ej: "a la altura del ombligo") */
+.field-hint { display: block; margin-top: 4px; color: var(--text-dim); font-size: 11.5px; line-height: 1.3; }
+
+/* Aviso suave arriba del registro corporal (recordatorio de medir) */
+.corp-aviso {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 14px; padding: 10px 14px; font-size: 13.5px;
+  color: var(--text); box-shadow: var(--bevel);
+}
+
+/* Fila con interruptor (ej: "Recorte chico" de Gabi) */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
+.toggle-row > span { font-size: 13.5px; line-height: 1.35; }
+.toggle-row input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; flex: 0 0 auto;
+  width: 46px; height: 28px; border-radius: 999px; cursor: pointer;
+  background: var(--line); position: relative; transition: background .15s;
+}
+.toggle-row input[type="checkbox"]::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s;
+}
+.toggle-row input[type="checkbox"]:checked { background: var(--accent); }
+.toggle-row input[type="checkbox"]:checked::after { transform: translateX(18px); }
 
 /* Pantallas grandes: centrar el contenido como en un teléfono */
 @media (min-width: 640px) {
