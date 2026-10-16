@@ -399,8 +399,8 @@
           "reps": "10-12"
         },
         {
-          "id": "remo_polea_baja",
-          "nombre": "Remo en polea baja",
+          "id": "remo_mancuernas",
+          "nombre": "Remo con mancuernas",
           "medida": "kg",
           "series": 3,
           "reps": "10-12"
@@ -448,8 +448,8 @@
           "rir": 2
         },
         {
-          "id": "remo_polea_baja",
-          "nombre": "Remo en polea baja",
+          "id": "remo_mancuernas",
+          "nombre": "Remo con mancuernas",
           "medida": "kg",
           "series": 3,
           "reps": "12-15",
@@ -646,8 +646,8 @@
       "medida": "kg"
     },
     {
-      "id": "remo_polea_baja",
-      "nombre": "Remo en polea baja",
+      "id": "remo_mancuernas",
+      "nombre": "Remo con mancuernas",
       "medida": "kg"
     },
     {

@@ -10,7 +10,7 @@
 // ============================================================
 
 // Si cambiás archivos y no ves los cambios, subí este número (v3, v4...).
-const CACHE = "gym-cache-v22";
+const CACHE = "gym-cache-v23";
 
 const ASSETS = [
   "./",
