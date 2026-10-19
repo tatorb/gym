@@ -29,11 +29,12 @@
       "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "plancha_frontal",
-          "nombre": "Plancha frontal",
+          "id": "plancha_lateral_pie_cubo",
+          "nombre": "Plancha lateral con pie en cubo",
           "medida": "seg",
           "series": 2,
-          "reps": "40"
+          "reps": "40",
+          "indicacion": "Prevención de isquios. De costado, con el pie de arriba apoyado sobre un cubo o banco; sostené la cadera bien alineada. Hacé los dos lados."
         },
         {
           "id": "curl_femoral",
@@ -515,6 +516,11 @@
     {
       "id": "plancha_frontal",
       "nombre": "Plancha frontal",
+      "medida": "seg"
+    },
+    {
+      "id": "plancha_lateral_pie_cubo",
+      "nombre": "Plancha lateral con pie en cubo",
       "medida": "seg"
     },
     {
