@@ -84,12 +84,21 @@
           "video": "https://youtube.com/shorts/EotSw18oR9w"
         },
         {
-          "id": "abduccion_maquina",
-          "nombre": "Abducción en máquina",
+          "id": "superserie_abduccion_aduccion",
+          "nombre": "Abducción + Aducción en máquina",
           "medida": "kg",
-          "series": 3,
-          "reps": "15",
-          "video": "https://youtube.com/shorts/HJLzMM_naPg"
+          "superset": [
+            {
+              "nombre": "Abducción en máquina",
+              "series": 3,
+              "reps": "15"
+            },
+            {
+              "nombre": "Aducción en máquina",
+              "series": 3,
+              "reps": "15"
+            }
+          ]
         },
         {
           "id": "ab_wheel",
@@ -143,13 +152,21 @@
           "video": "https://youtube.com/shorts/VB6Wu90UHZA"
         },
         {
-          "id": "abduccion_maquina",
-          "nombre": "Abducción en máquina",
+          "id": "superserie_abduccion_aduccion",
+          "nombre": "Abducción + Aducción en máquina",
           "medida": "kg",
-          "series": 3,
-          "reps": "15-20",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/HJLzMM_naPg"
+          "superset": [
+            {
+              "nombre": "Abducción en máquina",
+              "series": 3,
+              "reps": "15-20"
+            },
+            {
+              "nombre": "Aducción en máquina",
+              "series": 3,
+              "reps": "15-20"
+            }
+          ]
         },
         {
           "id": "dead_bug",
@@ -567,6 +584,11 @@
       "nombre": "Abducción en máquina",
       "medida": "kg",
       "video": "https://youtube.com/shorts/HJLzMM_naPg"
+    },
+    {
+      "id": "aduccion_maquina",
+      "nombre": "Aducción en máquina",
+      "medida": "kg"
     },
     {
       "id": "ab_wheel",
