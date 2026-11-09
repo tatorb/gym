@@ -29,6 +29,22 @@
       "tipo": "entreno",
       "ejercicios": [
         {
+          "id": "dead_bug",
+          "nombre": "Dead bug",
+          "medida": "reps",
+          "series": 2,
+          "reps": "8 x lado",
+          "indicacion": "Entrada en calor · activación de zona media. Suave, sin fatigar: bajá brazo y pierna opuestos manteniendo la panza firme y la zona lumbar pegada al piso."
+        },
+        {
+          "id": "bird_dog",
+          "nombre": "Bird dog",
+          "medida": "reps",
+          "series": 2,
+          "reps": "8 x lado",
+          "indicacion": "Entrada en calor · activación y estabilidad. En cuatro patas, estirá brazo y pierna opuestos sin arquear la espalda; movimiento lento y controlado."
+        },
+        {
           "id": "plancha_lateral_pie_cubo",
           "nombre": "Plancha lateral con pie en cubo",
           "medida": "seg",
@@ -560,6 +576,11 @@
     {
       "id": "dead_bug",
       "nombre": "Dead bug",
+      "medida": "reps"
+    },
+    {
+      "id": "bird_dog",
+      "nombre": "Bird dog",
       "medida": "reps"
     },
     {
