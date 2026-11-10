@@ -53,6 +53,30 @@
           "indicacion": "Prevención de isquios. De costado, con el pie de arriba apoyado sobre un cubo o banco; sostené la cadera bien alineada. Hacé los dos lados."
         },
         {
+          "id": "ab_wheel",
+          "nombre": "Ab wheel",
+          "medida": "reps",
+          "series": 3,
+          "reps": "10-14"
+        },
+        {
+          "id": "superserie_abduccion_aduccion",
+          "nombre": "Abducción + Aducción en máquina",
+          "medida": "kg",
+          "superset": [
+            {
+              "nombre": "Abducción en máquina",
+              "series": 3,
+              "reps": "15"
+            },
+            {
+              "nombre": "Aducción en máquina",
+              "series": 3,
+              "reps": "15"
+            }
+          ]
+        },
+        {
           "id": "curl_femoral",
           "nombre": "Curl femoral",
           "medida": "kg",
@@ -82,30 +106,6 @@
           "series": 3,
           "reps": "8-10",
           "video": "https://youtube.com/shorts/EotSw18oR9w"
-        },
-        {
-          "id": "superserie_abduccion_aduccion",
-          "nombre": "Abducción + Aducción en máquina",
-          "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Abducción en máquina",
-              "series": 3,
-              "reps": "15"
-            },
-            {
-              "nombre": "Aducción en máquina",
-              "series": 3,
-              "reps": "15"
-            }
-          ]
-        },
-        {
-          "id": "ab_wheel",
-          "nombre": "Ab wheel",
-          "medida": "reps",
-          "series": 3,
-          "reps": "10-14"
         }
       ],
       "ejerciciosGabi": [
