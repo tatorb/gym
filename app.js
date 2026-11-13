@@ -660,7 +660,9 @@ function renderFinishCard() {
 }
 
 // ==================== TIMER DE DESCANSO ====================
-const REST = { total: 50, endAt: null, alarmed: false, tick: null };
+const REST = { max: 180, startAt: null, tick: null, ended: false, fired: {} };
+// Segundos en que el timer avisa durante la pausa (1:00, 1:30, 2:00 y el tope 3:00).
+const REST_AVISOS = [60, 90, 120, 180];
 let restOverlay = null;
 let audioCtx = null;
 
@@ -683,14 +685,21 @@ function beep() {
     o.start(t); o.stop(t + 0.42);
   } catch { /* ignorar */ }
 }
-function restAlarm() {
+function restAvisoBeep() {
+  if (navigator.vibrate) navigator.vibrate(150);
+  beep();
+}
+function restAlarmFinal() {
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   beep(); setTimeout(beep, 220);
-  toast("¡Descanso terminado! 💪");
 }
-function restRemaining() {
-  if (REST.endAt === null) return null;
-  return Math.max(0, Math.ceil((REST.endAt - performance.now()) / 1000));
+function restElapsed() {
+  if (REST.startAt === null) return null;
+  return Math.min(REST.max, Math.floor((performance.now() - REST.startAt) / 1000));
+}
+function fmtRest(s) {
+  const m = Math.floor(s / 60), ss = s % 60;
+  return `${m}:${String(ss).padStart(2, "0")}`;
 }
 function ringSVG(remFrac) {
   const r = 19, c = 2 * Math.PI * r, off = c * (1 - remFrac);
@@ -700,32 +709,28 @@ function ringSVG(remFrac) {
   </svg>`;
 }
 function renderRestInto(el) {
-  const rem = restRemaining();
-  if (rem === null) {
+  const s = restElapsed();
+  if (s === null) {
     el.className = "ex-chip rest-chip";
     el.innerHTML = `${ICONS.clock}<span>Descanso</span>`;
     el.onclick = startRest;
-  } else if (rem === 0) {
-    el.className = "ex-chip rest-chip done";
-    el.innerHTML = `${ICONS.clock}<span>¡Listo!</span>`;
-    el.onclick = stopRest;
   } else {
-    el.className = "ex-chip rest-chip on";
-    el.innerHTML = `${ICONS.clock}<span>${rem}s</span>`;
+    el.className = REST.ended ? "ex-chip rest-chip done" : "ex-chip rest-chip on";
+    el.innerHTML = `${ICONS.clock}<span>${fmtRest(s)}</span>`;
     el.onclick = stopRest;
   }
 }
 function renderRestAll() { $$(".rest-chip").forEach(renderRestInto); }
 
 // ---- Overlay a pantalla completa con números inmensos ----
-function restOverlayText(rem) {
-  return rem === 0 ? "¡Listo!" : String(rem);
+function restOverlayText(s) {
+  return fmtRest(s);
 }
 function showRestOverlay() {
   if (restOverlay) return;
   const ov = document.createElement("div");
   ov.className = "rest-overlay";
-  ov.innerHTML = `<div class="rest-overlay-num">${restOverlayText(restRemaining() ?? REST.total)}</div>
+  ov.innerHTML = `<div class="rest-overlay-num">${restOverlayText(restElapsed() ?? 0)}</div>
     <div class="rest-overlay-hint">Tocá para minimizar</div>`;
   ov.addEventListener("click", dismissRestOverlay);
   document.body.appendChild(ov);
@@ -734,10 +739,10 @@ function showRestOverlay() {
 }
 function updateRestOverlay() {
   if (!restOverlay) return;
-  const rem = restRemaining();
-  if (rem === null) { dismissRestOverlay(); return; }
-  restOverlay.querySelector(".rest-overlay-num").textContent = restOverlayText(rem);
-  if (rem === 0) restOverlay.classList.add("done");
+  const s = restElapsed();
+  if (s === null) { dismissRestOverlay(); return; }
+  restOverlay.querySelector(".rest-overlay-num").textContent = restOverlayText(s);
+  if (REST.ended) restOverlay.classList.add("done");
 }
 function dismissRestOverlay() {
   if (!restOverlay) return;
@@ -750,25 +755,36 @@ function dismissRestOverlay() {
 
 function startRest() {
   ensureAudio();
-  REST.endAt = performance.now() + REST.total * 1000;
-  REST.alarmed = false;
+  REST.startAt = performance.now();
+  REST.ended = false;
+  REST.fired = {};
   if (!REST.tick) REST.tick = setInterval(tickRest, 200);
   showRestOverlay();
   renderRestAll();
 }
 function stopRest() {
-  REST.endAt = null; REST.alarmed = false;
+  REST.startAt = null; REST.ended = false; REST.fired = {};
   if (REST.tick) { clearInterval(REST.tick); REST.tick = null; }
   dismissRestOverlay();
   renderRestAll();
 }
 function tickRest() {
-  const rem = restRemaining();
-  if (rem === 0 && !REST.alarmed) {
-    REST.alarmed = true;
-    restAlarm();
-    if (REST.tick) { clearInterval(REST.tick); REST.tick = null; } // ya no hace falta seguir
-    setTimeout(() => { if (REST.alarmed) stopRest(); }, 4000);     // vuelve a "Descanso" solo
+  const s = restElapsed();
+  if (s === null) return;
+  for (const mark of REST_AVISOS) {
+    if (s >= mark && !REST.fired[mark]) {
+      REST.fired[mark] = true;
+      if (mark >= REST.max) {
+        REST.ended = true;
+        restAlarmFinal();
+        toast("⏱ 3 min · pausa máxima 💪");
+        if (REST.tick) { clearInterval(REST.tick); REST.tick = null; } // llegó al tope
+        setTimeout(() => { if (REST.ended) stopRest(); }, 5000);        // vuelve a "Descanso" solo
+      } else {
+        restAvisoBeep();
+        toast(`⏱ ${fmtRest(mark)}`);
+      }
+    }
   }
   updateRestOverlay();
   renderRestAll();
