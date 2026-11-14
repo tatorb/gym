@@ -69,11 +69,12 @@
           "video": "https://youtube.com/shorts/xB1lGVzRwWk"
         },
         {
-          "id": "back_squat",
-          "nombre": "Back squat",
+          "id": "back_squat_profundas",
+          "nombre": "Back squat profundas",
           "medida": "kg",
           "series": 4,
-          "reps": "5"
+          "reps": "6",
+          "indicacion": "Bajá hasta romper la paralela (muslos por debajo de la rodilla) con buen control. Al bajar más, vas a usar menos peso que en la sentadilla normal."
         },
         {
           "id": "hip_thrust_barra",
@@ -541,6 +542,11 @@
     {
       "id": "back_squat",
       "nombre": "Back squat",
+      "medida": "kg"
+    },
+    {
+      "id": "back_squat_profundas",
+      "nombre": "Back squat profundas",
       "medida": "kg"
     },
     {
