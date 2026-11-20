@@ -25,133 +25,84 @@
     {
       "id": "lunes",
       "nombre": "Lunes",
-      "subtitulo": "Piernas + glúteos + core",
+      "subtitulo": "Pierna completa",
       "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "plancha_lateral_pie_cubo",
-          "nombre": "Plancha lateral con pie en cubo",
+          "id": "plancha_copenhague",
+          "nombre": "Plancha de Copenhague",
           "medida": "seg",
           "series": 2,
-          "reps": "40",
-          "indicacion": "Prevención de isquios. De costado, con el pie de arriba apoyado sobre un cubo o banco; sostené la cadera bien alineada. Hacé los dos lados."
+          "reps": "15-20 x lado",
+          "video": "https://www.youtube.com/watch?v=wsrIFTxcBXM",
+          "indicacion": "Entrada en calor. De costado, con el pie/rodilla de arriba apoyado en un banco; sostené la cadera arriba y firme. Hacé los dos lados."
         },
         {
-          "id": "ab_wheel",
-          "nombre": "Ab wheel",
+          "id": "puente_gluteo_una_pierna",
+          "nombre": "Puente de glúteo a una pierna",
           "medida": "reps",
-          "series": 3,
-          "reps": "10-14"
+          "series": 2,
+          "reps": "10-12 x lado",
+          "indicacion": "Entrada en calor. Apretá el glúteo arriba, sin arquear la zona lumbar."
         },
         {
-          "id": "superserie_abduccion_aduccion",
-          "nombre": "Abducción + Aducción en máquina",
+          "id": "zancada_rotacion",
+          "nombre": "Zancadas con rotación de tronco",
+          "medida": "reps",
+          "series": 2,
+          "reps": "8-10 x pierna",
+          "indicacion": "Entrada en calor. En la zancada, girá el tronco hacia la pierna de adelante. Movilidad y control."
+        },
+        {
+          "id": "pallof_press",
+          "nombre": "Prensa Pallof",
+          "medida": "reps",
+          "series": 2,
+          "reps": "10 x lado",
+          "indicacion": "Entrada en calor · core anti-rotación. 10 reps o 10 seg de isometría por lado; no dejes que el tronco gire."
+        },
+        {
+          "id": "sentadilla_o_prensa",
+          "nombre": "Sentadilla libre o Prensa 45°",
           "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Abducción en máquina",
-              "series": 3,
-              "reps": "15"
-            },
-            {
-              "nombre": "Aducción en máquina",
-              "series": 3,
-              "reps": "15"
-            }
-          ]
+          "series": 4,
+          "reps": "6-8"
+        },
+        {
+          "id": "peso_muerto_rumano",
+          "nombre": "Peso muerto rumano",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8-10"
+        },
+        {
+          "id": "bulgara_o_zancada",
+          "nombre": "Sentadilla búlgara o zancadas",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10 x pierna"
         },
         {
           "id": "curl_femoral",
-          "nombre": "Curl femoral",
+          "nombre": "Camilla femoral (curl de isquios)",
           "medida": "kg",
           "series": 3,
-          "reps": "10",
+          "reps": "10-12",
           "video": "https://youtube.com/shorts/xB1lGVzRwWk"
         },
         {
-          "id": "back_squat_profundas",
-          "nombre": "Back squat profundas",
+          "id": "extension_cuadriceps",
+          "nombre": "Sillón de cuádriceps (extensiones)",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15"
+        },
+        {
+          "id": "gemelos_pie",
+          "nombre": "Gemelos de pie",
           "medida": "kg",
           "series": 4,
-          "reps": "6",
-          "indicacion": "Bajá hasta romper la paralela (muslos por debajo de la rodilla) con buen control. Al bajar más, vas a usar menos peso que en la sentadilla normal."
-        },
-        {
-          "id": "hip_thrust_barra",
-          "nombre": "Hip thrust con barra",
-          "medida": "kg",
-          "series": 4,
-          "reps": "8",
-          "video": "https://youtube.com/shorts/42lU8xsumBo"
-        },
-        {
-          "id": "prensa",
-          "nombre": "Prensa",
-          "medida": "kg",
-          "series": 3,
-          "reps": "8-10",
-          "video": "https://youtube.com/shorts/EotSw18oR9w"
-        }
-      ],
-      "ejerciciosGabi": [
-        {
-          "id": "plancha_frontal",
-          "nombre": "Plancha frontal",
-          "medida": "seg",
-          "series": 2,
-          "reps": "40"
-        },
-        {
-          "id": "hip_thrust_barra",
-          "nombre": "Hip thrust con barra",
-          "medida": "kg",
-          "series": 4,
-          "reps": "10-12",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/42lU8xsumBo"
-        },
-        {
-          "id": "back_squat",
-          "nombre": "Back squat",
-          "medida": "kg",
-          "series": 3,
-          "reps": "8-10",
-          "rir": 2
-        },
-        {
-          "id": "prensa",
-          "nombre": "Prensa",
-          "medida": "kg",
-          "series": 3,
-          "reps": "12-15",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/EotSw18oR9w"
-        },
-        {
-          "id": "peso_muerto_rumano_mancuernas",
-          "nombre": "RDL con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "10-12",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/VB6Wu90UHZA"
-        },
-        {
-          "id": "superserie_abduccion_aduccion",
-          "nombre": "Abducción + Aducción en máquina",
-          "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Abducción en máquina",
-              "series": 3,
-              "reps": "15-20"
-            },
-            {
-              "nombre": "Aducción en máquina",
-              "series": 3,
-              "reps": "15-20"
-            }
-          ]
+          "reps": "12-15"
         }
       ]
     },
@@ -265,123 +216,94 @@
     {
       "id": "miercoles",
       "nombre": "Miércoles",
-      "subtitulo": "Superior A",
+      "subtitulo": "Torso empuje",
       "tipo": "entreno",
       "ejercicios": [
         {
+          "id": "plancha_copenhague",
+          "nombre": "Plancha de Copenhague",
+          "medida": "seg",
+          "series": 2,
+          "reps": "15-20 x lado",
+          "video": "https://www.youtube.com/watch?v=wsrIFTxcBXM",
+          "indicacion": "Entrada en calor. De costado, con el pie/rodilla de arriba apoyado en un banco; sostené la cadera arriba y firme. Hacé los dos lados."
+        },
+        {
+          "id": "puente_gluteo_una_pierna",
+          "nombre": "Puente de glúteo a una pierna",
+          "medida": "reps",
+          "series": 2,
+          "reps": "10-12 x lado",
+          "indicacion": "Entrada en calor. Apretá el glúteo arriba, sin arquear la zona lumbar."
+        },
+        {
+          "id": "zancada_rotacion",
+          "nombre": "Zancadas con rotación de tronco",
+          "medida": "reps",
+          "series": 2,
+          "reps": "8-10 x pierna",
+          "indicacion": "Entrada en calor. En la zancada, girá el tronco hacia la pierna de adelante. Movilidad y control."
+        },
+        {
+          "id": "pallof_press",
+          "nombre": "Prensa Pallof",
+          "medida": "reps",
+          "series": 2,
+          "reps": "10 x lado",
+          "indicacion": "Entrada en calor · core anti-rotación. 10 reps o 10 seg de isometría por lado; no dejes que el tronco gire."
+        },
+        {
+          "id": "press_pecho_maquina",
+          "nombre": "Press de banca en máquina",
+          "medida": "kg",
+          "series": 4,
+          "reps": "6-8"
+        },
+        {
           "id": "press_inclinado_mancuernas",
           "nombre": "Press inclinado con mancuernas",
-          "medida": "kg",
-          "series": 4,
-          "reps": "6-8"
-        },
-        {
-          "id": "jalon_prono",
-          "nombre": "Jalón en polea prono",
-          "medida": "kg",
-          "series": 4,
-          "reps": "6-8"
-        },
-        {
-          "id": "press_militar_mancuernas",
-          "nombre": "Press militar con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "8-10",
-          "video": "https://youtube.com/shorts/k6tzKisR3NY"
-        },
-        {
-          "id": "remo_maquina",
-          "nombre": "Remo en máquina",
           "medida": "kg",
           "series": 3,
           "reps": "8-10"
         },
         {
-          "id": "vuelos_laterales",
-          "nombre": "Vuelos laterales",
+          "id": "press_militar_mancuernas",
+          "nombre": "Press militar parado (mancuernas o barra)",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8-10",
+          "video": "https://youtube.com/shorts/k6tzKisR3NY"
+        },
+        {
+          "id": "aperturas_pec_deck",
+          "nombre": "Aperturas en máquina (Pec Deck) o cruce de poleas",
           "medida": "kg",
           "series": 3,
+          "reps": "12-15"
+        },
+        {
+          "id": "vuelos_laterales",
+          "nombre": "Vuelos laterales con mancuernas",
+          "medida": "kg",
+          "series": 4,
           "reps": "12-15",
           "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
         },
         {
-          "id": "superserie_curl_triceps_mancuernas",
-          "nombre": "Superserie: curl + tríceps con mancuernas",
-          "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Curl con mancuernas",
-              "series": 3,
-              "reps": "10"
-            },
-            {
-              "nombre": "Extensión de tríceps con mancuerna",
-              "series": 3,
-              "reps": "10"
-            }
-          ]
-        }
-      ],
-      "ejerciciosGabi": [
-        {
-          "id": "press_inclinado_mancuernas",
-          "nombre": "Press inclinado con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "8-10",
-          "rir": 2
-        },
-        {
-          "id": "jalon_prono",
-          "nombre": "Jalón en polea prono",
-          "medida": "kg",
-          "series": 4,
-          "reps": "8-10",
-          "rir": 2
-        },
-        {
-          "id": "press_militar_mancuernas",
-          "nombre": "Press militar con mancuernas",
+          "id": "extension_triceps_polea",
+          "nombre": "Extensión de tríceps en polea alta",
           "medida": "kg",
           "series": 3,
           "reps": "10-12",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/k6tzKisR3NY"
+          "video": "https://www.youtube.com/watch?v=GJEmlpJyF9E"
         },
         {
-          "id": "remo_maquina",
-          "nombre": "Remo en máquina",
+          "id": "press_frances",
+          "nombre": "Press francés (rompecráneos)",
           "medida": "kg",
           "series": 3,
           "reps": "10-12",
-          "rir": 2
-        },
-        {
-          "id": "vuelos_laterales",
-          "nombre": "Vuelos laterales",
-          "medida": "kg",
-          "series": 3,
-          "reps": "15-20",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
-        },
-        {
-          "id": "superserie_curl_triceps_mancuernas",
-          "nombre": "Superserie: curl + tríceps con mancuernas",
-          "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Curl con mancuernas",
-              "series": 3,
-              "reps": "12"
-            },
-            {
-              "nombre": "Extensión de tríceps con mancuerna",
-              "series": 3,
-              "reps": "12"
-            }
-          ]
+          "video": "https://www.youtube.com/watch?v=8f3g6mSk9Nw"
         }
       ]
     },
@@ -399,115 +321,76 @@
     {
       "id": "viernes",
       "nombre": "Viernes",
-      "subtitulo": "Superior B",
+      "subtitulo": "Torso tracción",
       "tipo": "entreno",
       "ejercicios": [
         {
-          "id": "press_pecho_maquina",
-          "nombre": "Press de pecho en máquina",
-          "medida": "kg",
-          "series": 3,
-          "reps": "10-12"
-        },
-        {
-          "id": "remo_mancuernas",
-          "nombre": "Remo con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "10-12"
-        },
-        {
-          "id": "vuelos_laterales",
-          "nombre": "Vuelos laterales",
-          "medida": "kg",
-          "series": 3,
-          "reps": "15",
-          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
-        },
-        {
-          "id": "vuelos_posteriores",
-          "nombre": "Vuelos posteriores en máquina",
-          "medida": "kg",
-          "series": 3,
-          "reps": "15"
-        },
-        {
-          "id": "superserie_curl_triceps_mancuernas",
-          "nombre": "Superserie: curl + tríceps con mancuernas",
-          "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Curl con mancuernas",
-              "series": 2,
-              "reps": "12-15"
-            },
-            {
-              "nombre": "Extensión de tríceps con mancuerna",
-              "series": 2,
-              "reps": "12-15"
-            }
-          ]
-        }
-      ],
-      "ejerciciosGabi": [
-        {
-          "id": "press_pecho_maquina",
-          "nombre": "Press de pecho en máquina",
-          "medida": "kg",
-          "series": 3,
-          "reps": "12-15",
-          "rir": 2
-        },
-        {
-          "id": "remo_mancuernas",
-          "nombre": "Remo con mancuernas",
-          "medida": "kg",
-          "series": 3,
-          "reps": "12-15",
-          "rir": 2
-        },
-        {
-          "id": "hip_thrust_maquina",
-          "nombre": "Hip thrust en máquina",
-          "medida": "kg",
-          "series": 3,
-          "reps": "12-15",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/m8g9VogoxMo"
-        },
-        {
-          "id": "vuelos_laterales",
-          "nombre": "Vuelos laterales",
-          "medida": "kg",
-          "series": 3,
-          "reps": "15-20",
-          "rir": 2,
-          "video": "https://youtube.com/shorts/Kl3LEzQ5Zqs"
-        },
-        {
-          "id": "vuelos_posteriores",
-          "nombre": "Vuelos posteriores en máquina",
-          "medida": "kg",
+          "id": "plancha_copenhague",
+          "nombre": "Plancha de Copenhague",
+          "medida": "seg",
           "series": 2,
-          "reps": "15-20",
-          "rir": 2
+          "reps": "15-20 x lado",
+          "video": "https://www.youtube.com/watch?v=wsrIFTxcBXM",
+          "indicacion": "Entrada en calor. De costado, con el pie/rodilla de arriba apoyado en un banco; sostené la cadera arriba y firme. Hacé los dos lados."
         },
         {
-          "id": "superserie_curl_triceps_mancuernas",
-          "nombre": "Superserie: curl + tríceps con mancuernas",
+          "id": "puente_gluteo_una_pierna",
+          "nombre": "Puente de glúteo a una pierna",
+          "medida": "reps",
+          "series": 2,
+          "reps": "10-12 x lado",
+          "indicacion": "Entrada en calor. Apretá el glúteo arriba, sin arquear la zona lumbar."
+        },
+        {
+          "id": "zancada_rotacion",
+          "nombre": "Zancadas con rotación de tronco",
+          "medida": "reps",
+          "series": 2,
+          "reps": "8-10 x pierna",
+          "indicacion": "Entrada en calor. En la zancada, girá el tronco hacia la pierna de adelante. Movilidad y control."
+        },
+        {
+          "id": "pallof_press",
+          "nombre": "Prensa Pallof",
+          "medida": "reps",
+          "series": 2,
+          "reps": "10 x lado",
+          "indicacion": "Entrada en calor · core anti-rotación. 10 reps o 10 seg de isometría por lado; no dejes que el tronco gire."
+        },
+        {
+          "id": "jalon_prono",
+          "nombre": "Jalón al pecho (agarre prono o neutro)",
           "medida": "kg",
-          "superset": [
-            {
-              "nombre": "Curl con mancuernas",
-              "series": 2,
-              "reps": "15"
-            },
-            {
-              "nombre": "Extensión de tríceps con mancuerna",
-              "series": 2,
-              "reps": "15"
-            }
-          ]
+          "series": 4,
+          "reps": "8-10"
+        },
+        {
+          "id": "remo_polea_baja_estrecho",
+          "nombre": "Remo en polea baja (agarre estrecho)",
+          "medida": "kg",
+          "series": 4,
+          "reps": "8-10"
+        },
+        {
+          "id": "pullover_polea",
+          "nombre": "Pull-over en polea alta (brazos extendidos)",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15"
+        },
+        {
+          "id": "vuelos_posteriores",
+          "nombre": "Vuelos posteriores (pájaros)",
+          "medida": "kg",
+          "series": 4,
+          "reps": "12-15"
+        },
+        {
+          "id": "curl_biceps_barra",
+          "nombre": "Curl de bíceps con barra",
+          "medida": "kg",
+          "series": 3,
+          "reps": "8-10"
         }
       ]
     },
@@ -702,6 +585,74 @@
       "nombre": "Frog pump",
       "medida": "reps",
       "video": "https://youtu.be/4M_-vB5SXXE"
+    },
+    {
+      "id": "plancha_copenhague",
+      "nombre": "Plancha de Copenhague",
+      "medida": "seg",
+      "video": "https://www.youtube.com/watch?v=wsrIFTxcBXM"
+    },
+    {
+      "id": "zancada_rotacion",
+      "nombre": "Zancadas con rotación de tronco",
+      "medida": "reps"
+    },
+    {
+      "id": "pallof_press",
+      "nombre": "Prensa Pallof",
+      "medida": "reps"
+    },
+    {
+      "id": "sentadilla_o_prensa",
+      "nombre": "Sentadilla libre o Prensa 45°",
+      "medida": "kg"
+    },
+    {
+      "id": "peso_muerto_rumano",
+      "nombre": "Peso muerto rumano",
+      "medida": "kg"
+    },
+    {
+      "id": "bulgara_o_zancada",
+      "nombre": "Sentadilla búlgara o zancadas",
+      "medida": "kg"
+    },
+    {
+      "id": "gemelos_pie",
+      "nombre": "Gemelos de pie",
+      "medida": "kg"
+    },
+    {
+      "id": "aperturas_pec_deck",
+      "nombre": "Aperturas en máquina (Pec Deck) o cruce de poleas",
+      "medida": "kg"
+    },
+    {
+      "id": "extension_triceps_polea",
+      "nombre": "Extensión de tríceps en polea alta",
+      "medida": "kg",
+      "video": "https://www.youtube.com/watch?v=GJEmlpJyF9E"
+    },
+    {
+      "id": "press_frances",
+      "nombre": "Press francés (rompecráneos)",
+      "medida": "kg",
+      "video": "https://www.youtube.com/watch?v=8f3g6mSk9Nw"
+    },
+    {
+      "id": "remo_polea_baja_estrecho",
+      "nombre": "Remo en polea baja (agarre estrecho)",
+      "medida": "kg"
+    },
+    {
+      "id": "pullover_polea",
+      "nombre": "Pull-over en polea alta (brazos extendidos)",
+      "medida": "kg"
+    },
+    {
+      "id": "curl_biceps_barra",
+      "nombre": "Curl de bíceps con barra",
+      "medida": "kg"
     }
   ]
 }
