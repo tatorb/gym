@@ -62,11 +62,19 @@
           "indicacion": "Entrada en calor · core anti-rotación. 10 reps o 10 seg de isometría por lado; no dejes que el tronco gire."
         },
         {
-          "id": "sentadilla_o_prensa",
-          "nombre": "Sentadilla libre o Prensa 45°",
+          "id": "back_squat",
+          "nombre": "Sentadilla libre",
           "medida": "kg",
           "series": 4,
           "reps": "6-8"
+        },
+        {
+          "id": "prensa",
+          "nombre": "Prensa 45°",
+          "medida": "kg",
+          "series": 4,
+          "reps": "6-8",
+          "video": "https://youtube.com/shorts/EotSw18oR9w"
         },
         {
           "id": "peso_muerto_rumano",
@@ -76,8 +84,16 @@
           "reps": "8-10"
         },
         {
-          "id": "bulgara_o_zancada",
-          "nombre": "Sentadilla búlgara o zancadas",
+          "id": "bulgaras",
+          "nombre": "Sentadilla búlgara",
+          "medida": "kg",
+          "series": 3,
+          "reps": "10 x pierna",
+          "video": "https://youtu.be/QE4Bc1t9Evs"
+        },
+        {
+          "id": "zancadas",
+          "nombre": "Zancadas",
           "medida": "kg",
           "series": 3,
           "reps": "10 x pierna"
@@ -268,7 +284,7 @@
         },
         {
           "id": "press_militar_mancuernas",
-          "nombre": "Press militar parado (mancuernas o barra)",
+          "nombre": "Press militar parado con mancuernas",
           "medida": "kg",
           "series": 4,
           "reps": "8-10",
@@ -276,7 +292,14 @@
         },
         {
           "id": "aperturas_pec_deck",
-          "nombre": "Aperturas en máquina (Pec Deck) o cruce de poleas",
+          "nombre": "Aperturas en máquina (Pec Deck)",
+          "medida": "kg",
+          "series": 3,
+          "reps": "12-15"
+        },
+        {
+          "id": "cruce_poleas",
+          "nombre": "Cruce de poleas",
           "medida": "kg",
           "series": 3,
           "reps": "12-15"
@@ -359,7 +382,7 @@
         },
         {
           "id": "jalon_prono",
-          "nombre": "Jalón al pecho (agarre prono o neutro)",
+          "nombre": "Jalón al pecho",
           "medida": "kg",
           "series": 4,
           "reps": "8-10"
@@ -603,18 +626,8 @@
       "medida": "reps"
     },
     {
-      "id": "sentadilla_o_prensa",
-      "nombre": "Sentadilla libre o Prensa 45°",
-      "medida": "kg"
-    },
-    {
       "id": "peso_muerto_rumano",
       "nombre": "Peso muerto rumano",
-      "medida": "kg"
-    },
-    {
-      "id": "bulgara_o_zancada",
-      "nombre": "Sentadilla búlgara o zancadas",
       "medida": "kg"
     },
     {
@@ -652,6 +665,16 @@
     {
       "id": "curl_biceps_barra",
       "nombre": "Curl de bíceps con barra",
+      "medida": "kg"
+    },
+    {
+      "id": "zancadas",
+      "nombre": "Zancadas",
+      "medida": "kg"
+    },
+    {
+      "id": "cruce_poleas",
+      "nombre": "Cruce de poleas",
       "medida": "kg"
     }
   ]
